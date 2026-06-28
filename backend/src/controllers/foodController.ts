@@ -144,6 +144,15 @@ export const importExternalFoodHandler = async (req: AuthRequest, res: Response)
     if (error instanceof Error && error.message.includes('not found')) {
       return res.status(404).json({ error: error.message });
     }
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const cached = await prisma.food.findFirst({
+        where: {
+          externalSource: req.body?.source,
+          externalId: String(req.body?.externalId ?? ''),
+        },
+      });
+      if (cached) return res.status(201).json(normalizeFoodServing(cached));
+    }
     console.error('Import food error:', error);
     return res.status(500).json({ error: 'Failed to import food' });
   }

@@ -28,8 +28,12 @@ function apiKey(): string | null {
   return process.env.USDA_API_KEY || 'DEMO_KEY';
 }
 
-function mapUsdaCategory(dataType?: string, category?: string): string {
-  if (category) return category;
+function mapUsdaCategory(dataType?: string, category?: unknown): string {
+  if (typeof category === 'string' && category.trim()) return category.trim();
+  if (category && typeof category === 'object' && 'description' in category) {
+    const desc = (category as { description?: string }).description;
+    if (typeof desc === 'string' && desc.trim()) return desc.trim();
+  }
   if (dataType === 'Branded') return 'Branded';
   if (dataType === 'Foundation') return 'Foundation';
   if (dataType === 'SR Legacy') return 'USDA';
@@ -51,7 +55,7 @@ function toExternalFood(
   const ratio = serving.servingSize / 100;
   return {
     name: String(item.description ?? 'Unknown food'),
-    category: mapUsdaCategory(item.dataType as string, (item.foodCategory as string | undefined)),
+    category: mapUsdaCategory(item.dataType as string, item.foodCategory),
     servingSize: serving.servingSize,
     servingUnit: serving.servingUnit,
     calories: Math.round(nutrients.calories * ratio * 10) / 10,
