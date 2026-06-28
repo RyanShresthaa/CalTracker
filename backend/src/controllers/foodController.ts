@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/prisma';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../lib/prisma';

@@ -12,8 +12,9 @@
       "workspace": "backend",
       "routePrefix": "/_/backend",
       "framework": "express",
-      "installCommand": "npm install",
-      "buildCommand": "npm run vercel-build"
+      "installCommand": "npm install && npx prisma generate",
+      "buildCommand": "npx prisma generate",
+      "preDeployCommand": "npx prisma generate"
     }
   }
 }

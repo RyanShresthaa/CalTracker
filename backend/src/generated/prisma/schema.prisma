@@ -1,0 +1,266 @@
+// This is your Prisma schema file
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  password             String
+  name                 String
+  age                  Int?
+  sex                  String? // "male" | "female"
+  height               Float? // cm
+  currentWeight        Float? // kg
+  goalWeight           Float? // kg
+  activityLevel        String? // sedentary | lightly_active | moderately_active | very_active | athlete
+  gymDaysPerWeek       Int? // structured lifting/cardio sessions per week
+  dailyWalkKm          Float? // average daily walk or run distance (km)
+  gymMinutesPerSession Int? // typical gym session length (minutes)
+  goal                 String? // lose_weight | maintain_weight | gain_weight
+  goalDate             DateTime?
+  profileCompleted     Boolean   @default(false)
+  isAdmin              Boolean   @default(false)
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  settings      Settings?
+  foodLogs      FoodLog[]
+  waterLogs     WaterLog[]
+  weightLogs    WeightLog[]
+  activities    ActivityLog[]
+  customFoods   CustomFood[]
+  recipes       Recipe[]
+  notifications Notification[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Settings {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  darkMode     Boolean  @default(false)
+  units        String   @default("metric") // metric | imperial
+  waterGoal    Float    @default(2000) // ml
+  calorieGoal  Float?
+  proteinGoal  Float?
+  carbsGoal    Float?
+  fatGoal      Float?
+  notifWater   Boolean  @default(true)
+  notifMeals   Boolean  @default(true)
+  notifWorkout Boolean  @default(true)
+  notifWeight  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model Food {
+  id             String   @id @default(uuid())
+  name           String
+  category       String
+  servingSize    Float // grams
+  servingUnit    String   @default("g")
+  calories       Float
+  protein        Float
+  carbs          Float
+  fat            Float
+  fiber          Float    @default(0)
+  sugar          Float    @default(0)
+  sodium         Float    @default(0)
+  barcode        String?  @unique
+  externalSource String? // usda | off
+  externalId     String?
+  isVerified     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  foodLogs          FoodLog[]
+  recipeIngredients RecipeIngredient[]
+
+  @@unique([externalSource, externalId])
+  @@map("foods")
+}
+
+model CustomFood {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   @default("custom")
+  servingSize Float
+  servingUnit String   @default("g")
+  calories    Float
+  protein     Float
+  carbs       Float
+  fat         Float
+  fiber       Float    @default(0)
+  sugar       Float    @default(0)
+  sodium      Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  foodLogs          FoodLog[]
+  recipeIngredients RecipeIngredient[]
+
+  @@map("custom_foods")
+}
+
+model Recipe {
+  id          String             @id @default(uuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  servings    Float              @default(1)
+  servingSize Float // grams per serving
+  servingUnit String             @default("serving")
+  calories    Float // per serving
+  protein     Float
+  carbs       Float
+  fat         Float
+  fiber       Float              @default(0)
+  sugar       Float              @default(0)
+  sodium      Float              @default(0)
+  totalWeight Float // total batch weight in grams
+  ingredients RecipeIngredient[]
+  foodLogs    FoodLog[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id           String      @id @default(uuid())
+  recipeId     String
+  recipe       Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name         String
+  foodId       String?
+  food         Food?       @relation(fields: [foodId], references: [id])
+  customFoodId String?
+  customFood   CustomFood? @relation(fields: [customFoodId], references: [id])
+  amount       Float // grams
+  calories     Float
+  protein      Float
+  carbs        Float
+  fat          Float
+  fiber        Float       @default(0)
+  sortOrder    Int         @default(0)
+
+  @@map("recipe_ingredients")
+}
+
+model FoodLog {
+  id           String      @id @default(uuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodId       String?
+  food         Food?       @relation(fields: [foodId], references: [id])
+  customFoodId String?
+  customFood   CustomFood? @relation(fields: [customFoodId], references: [id])
+  recipeId     String?
+  recipe       Recipe?     @relation(fields: [recipeId], references: [id])
+  mealType     String // breakfast | lunch | dinner | snacks
+  amount       Float // grams
+  calories     Float
+  protein      Float
+  carbs        Float
+  fat          Float
+  fiber        Float       @default(0)
+  logDate      DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("food_logs")
+}
+
+model WaterLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float // ml
+  logDate   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@map("water_logs")
+}
+
+model WeightLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weight    Float // kg
+  note      String?
+  logDate   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@map("weight_logs")
+}
+
+model ActivityLog {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityType   String // gym | walking | running | cycling | swimming | etc
+  name           String
+  duration       Float // minutes
+  caloriesBurned Float
+  notes          String?
+  // Gym specific
+  sets           Int?
+  reps           Int?
+  weightUsed     Float?
+  muscleGroup    String? // chest | back | shoulder | biceps | triceps | legs
+  startWeight    Float?
+  startReps      Int?
+  endWeight      Float?
+  endReps        Int?
+  totalVolume    Float? // sum of weight × reps across all sets (kg·reps)
+  // Cardio specific
+  distance       Float? // km
+  speed          Float? // km/h
+  pace           Float? // min/km
+  // Swimming
+  stroke         String?
+  logDate        DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // water | meal | workout | weight | goal
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
