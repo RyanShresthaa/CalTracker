@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   House, ForkKnife, Drop, Scales, Lightning, ChartLine,
-  Gear, SignOut, List, X, Bell, Moon, Sun, UserCircle,
-  FirstAid, BookOpen
+  Gear, SignOut, List, X, UserCircle, BookOpen,
 } from 'phosphor-react';
-import { useAuthStore, useThemeStore } from '../../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import InstallPWA from '../InstallPWA';
 import toast from 'react-hot-toast';
 
@@ -23,77 +22,63 @@ const navItems = [
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuthStore();
-  const { darkMode, toggleDarkMode } = useThemeStore();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
-    toast.success('Logged out successfully');
+    toast.success('Logged out');
     navigate('/login');
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
-      {/* Sidebar overlay (mobile) */}
+    <div className="flex h-screen overflow-hidden bg-bg">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-30 w-64 flex flex-col
-        bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700
-        transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-30 w-56 flex flex-col
+        bg-surface border-r border-border
+        transform transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between h-14 px-5 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <FirstAid size={18} weight="bold" className="text-white" />
+            <div className="w-7 h-7 bg-accent flex items-center justify-center">
+              <span className="font-mono text-xs font-bold text-bg">CT</span>
             </div>
-            <span className="font-bold text-lg gradient-text">CalTracker</span>
+            <span className="font-mono text-sm tracking-wider text-text-primary uppercase">CalTracker</span>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden btn-ghost p-1">
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* User info */}
-        <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate text-slate-900 dark:text-white">{user?.name}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-            </div>
-          </div>
+        <div className="px-4 py-4 border-b border-border">
+          <p className="font-medium text-sm text-text-primary truncate">{user?.name}</p>
+          <p className="text-xs text-muted truncate font-mono">{user?.email}</p>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-all duration-200
+                flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-200
                 ${isActive
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}
+                  ? 'bg-hover text-accent border-l-2 border-accent'
+                  : 'text-muted hover:bg-hover hover:text-text-primary border-l-2 border-transparent'}
               `}
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
-                  {label}
+                  <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
+                  <span className="label-caps !text-[10px]">{label}</span>
                 </>
               )}
             </NavLink>
@@ -102,70 +87,41 @@ export default function Layout() {
           {user?.isAdmin && (
             <NavLink
               to="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 text-sm text-coral hover:bg-hover transition-colors border-l-2 border-transparent"
             >
-              <UserCircle size={20} />
-              Admin Panel
+              <UserCircle size={18} />
+              <span className="label-caps !text-[10px]">Admin</span>
             </NavLink>
           )}
         </nav>
 
-        {/* Bottom actions */}
-        <div className="px-3 py-4 border-t border-slate-200 dark:border-slate-700 space-y-1">
-          <button
-            onClick={toggleDarkMode}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-              text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            {darkMode ? 'Light Mode' : 'Dark Mode'}
-          </button>
+        <div className="px-2 py-3 border-t border-border">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-              text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-muted hover:bg-hover hover:text-coral transition-colors"
           >
-            <SignOut size={20} />
-            Logout
+            <SignOut size={18} />
+            <span className="label-caps !text-[10px]">Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6">
+        <header className="h-14 bg-surface border-b border-border flex items-center px-4 lg:px-6">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden btn-ghost p-2"
+            className="lg:hidden btn-ghost p-2 -ml-2"
           >
             <List size={22} />
           </button>
 
-          <div className="hidden lg:block">
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Welcome back, {user?.name?.split(' ')[0]}! 👋
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <button className="relative btn-ghost p-2">
-              <Bell size={22} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <button
-              onClick={toggleDarkMode}
-              className="hidden lg:flex btn-ghost p-2"
-            >
-              {darkMode ? <Sun size={22} /> : <Moon size={22} />}
-            </button>
+          <div className="hidden lg:block ml-1">
+            <p className="label-caps text-muted">{user?.name?.split(' ')[0]}</p>
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <div className="max-w-7xl mx-auto animate-in">
+          <div className="max-w-6xl mx-auto">
             <Outlet />
           </div>
         </main>

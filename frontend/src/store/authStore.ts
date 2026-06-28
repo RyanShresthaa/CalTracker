@@ -96,7 +96,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      darkMode: false,
+      darkMode: true,
       toggleDarkMode: () => set((s) => {
         const next = !s.darkMode;
         document.documentElement.classList.toggle('dark', next);

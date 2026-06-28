@@ -5,38 +5,49 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-        },
-        brand: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-        }
+        bg: '#0F0F0F',
+        surface: '#1A1A1A',
+        border: '#2A2A2A',
+        accent: '#C8F55A',
+        coral: '#FF6B35',
+        'text-primary': '#F0EDE6',
+        muted: '#6B6B6B',
+        hover: '#222222',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['"DM Mono"', '"Space Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'label': ['11px', { lineHeight: '1', letterSpacing: '0.12em' }],
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'pulse-slow': 'pulse 3s infinite',
+        'fade-in': 'fadeIn 0.4s ease-out both',
+        'slide-up': 'slideUp 0.4s ease-out both',
+        'ring-pulse': 'ringPulse 2s ease-in-out 0.6s 1',
+        'ring-fill': 'ringFill 600ms ease-out forwards',
       },
       keyframes: {
-        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-        slideUp: { from: { transform: 'translateY(20px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
+        fadeIn: {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          from: { transform: 'translateY(16px)', opacity: '0' },
+          to: { transform: 'translateY(0)', opacity: '1' },
+        },
+        ringPulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.82' },
+        },
+        ringFill: {
+          from: { '--ring-deg': '0deg' },
+          to: { '--ring-deg': 'var(--ring-target)' },
+        },
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-      }
+      transitionDuration: {
+        expand: '300ms',
+      },
     },
   },
   plugins: [],

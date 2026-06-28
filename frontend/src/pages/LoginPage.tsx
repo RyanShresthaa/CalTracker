@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeSlash, FirstAid, Envelope, Lock } from 'phosphor-react';
+import { Eye, EyeSlash, Envelope, Lock } from 'phosphor-react';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
@@ -25,7 +25,6 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       await login(data.email, data.password);
-      toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Login failed');
@@ -33,92 +32,90 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex-col justify-center items-center p-12 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="absolute rounded-full bg-white"
-              style={{ width: Math.random()*200+50, height: Math.random()*200+50,
-                top: `${Math.random()*100}%`, left: `${Math.random()*100}%`, opacity: 0.1 }} />
-          ))}
-        </div>
-        <div className="relative z-10 text-center max-w-md">
-          <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mx-auto mb-6">
-            <FirstAid size={40} weight="bold" />
+    <div className="min-h-screen flex bg-bg">
+      <div className="hidden lg:flex lg:w-1/2 border-r border-border flex-col justify-center p-12">
+        <div className="max-w-sm">
+          <div className="w-10 h-10 bg-accent flex items-center justify-center mb-8">
+            <span className="font-mono text-sm font-bold text-bg">CT</span>
           </div>
-          <h1 className="text-4xl font-bold mb-4">CalorieTracker</h1>
-          <p className="text-xl text-white/80 mb-8">Your personal health & fitness companion</p>
-          <div className="grid grid-cols-2 gap-4 text-left">
-            {['Track calories & macros', 'Log workouts & activities', 'Monitor water intake', 'Visual progress charts'].map(f => (
-              <div key={f} className="bg-white/10 rounded-xl p-3 text-sm">{f}</div>
+          <h1 className="font-mono text-3xl font-light tracking-wider text-text-primary uppercase mb-4">
+            CalTracker
+          </h1>
+          <p className="text-muted text-sm leading-relaxed mb-8">
+            Track calories, macros, water, and activity. No noise.
+          </p>
+          <ul className="space-y-3">
+            {['Calorie & macro tracking', 'Food log with USDA search', 'Activity & weight logs', 'Weekly progress charts'].map(f => (
+              <li key={f} className="flex items-center gap-3 text-sm text-muted">
+                <span className="w-1 h-1 bg-accent shrink-0" />
+                {f}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50 dark:bg-slate-900">
+      <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <FirstAid size={18} weight="bold" className="text-white" />
+          <div className="lg:hidden flex items-center gap-2 mb-10">
+            <div className="w-8 h-8 bg-accent flex items-center justify-center">
+              <span className="font-mono text-xs font-bold text-bg">CT</span>
             </div>
-            <span className="font-bold text-xl gradient-text">CalorieTracker</span>
+            <span className="font-mono text-sm tracking-wider uppercase">CalTracker</span>
           </div>
 
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome back</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-8">Sign in to continue your journey</p>
+          <h2 className="font-mono text-2xl font-light tracking-wider text-text-primary uppercase mb-2">Sign in</h2>
+          <p className="text-muted text-sm mb-8">Enter your credentials to continue</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="label">Email</label>
               <div className="relative">
-                <Envelope size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Envelope size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                 <input {...register('email')} type="email" placeholder="you@example.com"
                   className="input pl-10" />
               </div>
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+              {errors.email && <p className="text-coral text-sm mt-1">{errors.email.message}</p>}
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="label mb-0">Password</label>
-                <Link to="/forgot-password" className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+                <Link to="/forgot-password" className="text-xs text-accent hover:brightness-110">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                 <input {...register('password')} type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••" className="input pl-10 pr-10" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted hover:text-text-primary">
                   {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+              {errors.password && <p className="text-coral text-sm mt-1">{errors.password.message}</p>}
             </div>
 
             <button type="submit" disabled={isLoading}
               className="btn-primary w-full flex items-center justify-center gap-2 py-3">
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />
               ) : 'Sign In'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-slate-600 dark:text-slate-400">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
-              Sign up free
+          <p className="mt-6 text-center text-sm text-muted">
+            No account?{' '}
+            <Link to="/register" className="text-accent hover:brightness-110">
+              Register
             </Link>
           </p>
 
-          <div className="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
-            <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Demo Credentials</p>
-            <p className="text-xs text-indigo-600 dark:text-indigo-400">Email: demo@calorietracker.com</p>
-            <p className="text-xs text-indigo-600 dark:text-indigo-400">Password: demo123456</p>
+          <div className="mt-6 p-4 border border-border bg-surface">
+            <p className="label-caps mb-2">Demo credentials</p>
+            <p className="text-xs text-muted font-mono">demo@calorietracker.com</p>
+            <p className="text-xs text-muted font-mono">demo123456</p>
           </div>
         </div>
       </div>

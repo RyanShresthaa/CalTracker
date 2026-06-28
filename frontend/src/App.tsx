@@ -53,9 +53,9 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          className: 'dark:bg-slate-800 dark:text-white',
+          className: '!bg-surface !text-text-primary !border !border-border',
           duration: 3000,
-          style: { borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' },
+          style: { borderRadius: 0, boxShadow: 'none' },
         }}
       />
       <Routes>

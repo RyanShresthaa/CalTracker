@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MagnifyingGlass, Plus, Trash, Barcode, X, Check } from 'phosphor-react';
+import { MagnifyingGlass, Barcode, X, Check } from 'phosphor-react';
 import {
   useFoodSearch, useBarcodeLookup, useFoodLogs, useAddFoodLog, useDeleteFoodLog,
+  useDashboard,
 } from '../lib/hooks';
 import {
   countToGrams, formatLoggedAmount, formatServingLabel, gramsToCount, isCountableFood, pluralizeUnit, quantityLabel,
 } from '../lib/foodUnits';
+import FoodLogEntry from '../components/ui/FoodLogEntry';
+import MacroBar from '../components/ui/MacroBar';
+import CalorieProgressRing from '../components/ui/CalorieProgressRing';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 const MEALS = [
-  { id: 'breakfast', label: 'Breakfast', emoji: '🌅' },
-  { id: 'lunch', label: 'Lunch', emoji: '☀️' },
-  { id: 'dinner', label: 'Dinner', emoji: '🌙' },
-  { id: 'snacks', label: 'Snacks', emoji: '🍎' },
+  { id: 'breakfast', label: 'Breakfast' },
+  { id: 'lunch', label: 'Lunch' },
+  { id: 'dinner', label: 'Dinner' },
+  { id: 'snacks', label: 'Snacks' },
 ];
 
 function foodKey(food: any) {
@@ -24,15 +28,15 @@ function foodKey(food: any) {
 
 function sourceBadge(source?: string) {
   switch (source) {
-    case 'usda': return { label: 'USDA', className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' };
-    case 'off': return { label: 'Open Food Facts', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' };
-    case 'custom': return { label: 'Custom', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' };
-    case 'recipe': return { label: 'My Recipe', className: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' };
+    case 'usda': return { label: 'USDA', className: 'border-accent/30 text-accent' };
+    case 'off': return { label: 'OFF', className: 'border-coral/30 text-coral' };
+    case 'custom': return { label: 'Custom', className: 'border-border text-muted' };
+    case 'recipe': return { label: 'Recipe', className: 'border-border text-muted' };
     default: return null;
   }
 }
 
-function FoodSearchModal({ meal, onClose, onAdd }: any) {
+function FoodSearchModal({ meal, onClose, onAdd, onMealChange }: any) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [barcodeResults, setBarcodeResults] = useState<any[] | null>(null);
@@ -123,32 +127,41 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
   const nutrition = selected ? calcNutrition(selected, amount) : null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-900 dark:text-white">Add to {meal}</h3>
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-surface border border-border w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <span className="label-caps">Add to</span>
+            <select
+              value={meal}
+              onChange={e => onMealChange(e.target.value)}
+              className="input w-auto py-1.5 text-sm font-mono"
+            >
+              {MEALS.map(m => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
           <button onClick={onClose} className="btn-ghost p-1"><X size={20} /></button>
         </div>
 
-        {/* Search */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-3">
+        <div className="p-4 border-b border-border space-y-3">
           <div className="relative">
-            <MagnifyingGlass size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <MagnifyingGlass size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Search USDA & Open Food Facts… (e.g. egg, chicken, momo)" className="input pl-10" autoFocus />
+              placeholder="Search USDA & Open Food Facts…" className="input pl-10" autoFocus />
             {searchFetching && query && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">Searching…</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">Searching…</span>
             )}
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Barcode size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Barcode size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 value={barcode}
                 onChange={e => setBarcode(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && lookupBarcode()}
-                placeholder="Or scan / enter barcode"
+                placeholder="Barcode"
                 className="input pl-10 text-sm"
               />
             </div>
@@ -156,74 +169,71 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
               Lookup
             </button>
           </div>
-          <p className="text-xs text-slate-400">Powered by USDA FoodData Central & Open Food Facts (free databases)</p>
+          <p className="text-xs text-muted">USDA FoodData Central & Open Food Facts</p>
         </div>
 
-        {/* Results */}
         <div className="flex-1 overflow-y-auto">
           {loading && (
             <div className="p-4 space-y-2">
-              {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-14 rounded-xl" />)}
+              {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-14" />)}
             </div>
           )}
           {!loading && results.length === 0 && query && (
-            <div className="text-center py-12 text-slate-500">
-              <p className="text-sm">Search USDA or Open Food Facts for "{query}"</p>
+            <div className="text-center py-12 text-muted">
+              <p className="text-sm">No results for &ldquo;{query}&rdquo;</p>
             </div>
           )}
           {!loading && results.length === 0 && !query && (
-            <div className="text-center py-12 text-slate-400">
-              <MagnifyingGlass size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">No saved recipes or custom foods yet</p>
-              <p className="text-xs mt-1">Create a <Link to="/recipes" className="text-indigo-600 hover:underline">recipe</Link> or search USDA / Open Food Facts</p>
+            <div className="text-center py-12 text-muted">
+              <MagnifyingGlass size={32} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Search or scan a barcode</p>
+              <p className="text-xs mt-1">
+                Or create a <Link to="/recipes" className="link-accent">recipe</Link>
+              </p>
             </div>
           )}
           {!loading && results.length > 0 && !query && (
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 pb-2 uppercase tracking-wide">
-              Your recipes & custom foods
-            </p>
+            <p className="label-caps px-4 pt-3 pb-2">Your recipes & custom foods</p>
           )}
           {results.map((food: any) => {
             const badge = sourceBadge(food.source ?? food.externalSource);
             const isSelected = selected && foodKey(selected) === foodKey(food);
             return (
             <button key={foodKey(food)} onClick={() => selectFood(food)}
-              className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50
-                ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}>
+              className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-hover
+                ${isSelected ? 'bg-hover border-l-2 border-accent' : ''}`}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{food.name}</p>
+                  <p className="font-medium text-text-primary text-sm truncate">{food.name}</p>
                   {badge && <span className={`badge ${badge.className}`}>{badge.label}</span>}
-                  {food.category && <span className="badge bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400">{food.category}</span>}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{formatServingLabel(food)} · {Math.round(food.calories)} kcal · P:{food.protein}g C:{food.carbs}g F:{food.fat}g</p>
+                <p className="text-xs text-muted mt-0.5 font-mono">
+                  {formatServingLabel(food)} · {Math.round(food.calories)} kcal · P:{food.protein}g C:{food.carbs}g F:{food.fat}g
+                </p>
               </div>
-              {isSelected && <Check size={18} weight="bold" className="text-indigo-500 ml-2 shrink-0" />}
+              {isSelected && <Check size={18} weight="bold" className="text-accent ml-2 shrink-0" />}
             </button>
           );})}
         </div>
 
-        {/* Amount selector & Add button */}
         {selected && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+          <div className="p-4 border-t border-border space-y-3">
             <div className={`grid gap-3 ${isCountableFood(selected) ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {isCountableFood(selected) && (
                 <div>
-                  <label className="label text-xs">
-                    {quantityLabel(selected.servingUnit || 'piece')}
-                  </label>
+                  <label className="label">{quantityLabel(selected.servingUnit || 'piece')}</label>
                   <input
                     type="number"
                     value={count}
                     min={0.25}
                     step={0.25}
                     onChange={e => updateCount(Number(e.target.value))}
-                    className="input text-center font-bold text-lg"
+                    className="input text-center font-mono text-lg"
                   />
                 </div>
               )}
               <div>
-                <label className="label text-xs">
+                <label className="label">
                   {selected.servingUnit === 'ml' ? 'Amount (ml)' : 'Weight (g)'}
                 </label>
                 <input
@@ -232,12 +242,12 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
                   min={1}
                   step={isCountableFood(selected) ? selected.servingSize : 1}
                   onChange={e => updateAmount(Number(e.target.value))}
-                  className="input text-center font-bold text-lg"
+                  className="input text-center font-mono text-lg"
                 />
               </div>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-1">Quick add</p>
+              <p className="label mb-2">Quick add</p>
               <div className="flex flex-wrap gap-1">
                 {(isCountableFood(selected)
                   ? [1, 2, 3, 4].map(v => ({ value: v, label: `${v} ${pluralizeUnit(selected.servingUnit, v)}` }))
@@ -248,10 +258,10 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
                   <button
                     key={label}
                     onClick={() => (isCountableFood(selected) ? updateCount(value) : updateAmount(value))}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors
+                    className={`px-2.5 py-1 text-xs font-mono transition-colors border
                       ${(isCountableFood(selected) ? count === value : amount === value)
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'}`}
+                        ? 'bg-accent text-bg border-accent'
+                        : 'bg-surface text-muted border-border hover:bg-hover'}`}
                   >
                     {label}
                   </button>
@@ -259,15 +269,15 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
               </div>
             </div>
             {nutrition && (
-              <div className="grid grid-cols-4 gap-2 text-center bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
-                <div><p className="text-lg font-bold text-indigo-600">{nutrition.calories}</p><p className="text-xs text-slate-500">kcal</p></div>
-                <div><p className="text-lg font-bold text-blue-600">{nutrition.protein}g</p><p className="text-xs text-slate-500">Protein</p></div>
-                <div><p className="text-lg font-bold text-green-600">{nutrition.carbs}g</p><p className="text-xs text-slate-500">Carbs</p></div>
-                <div><p className="text-lg font-bold text-amber-600">{nutrition.fat}g</p><p className="text-xs text-slate-500">Fat</p></div>
+              <div className="grid grid-cols-4 gap-2 text-center border border-border p-3">
+                <div><p className="font-mono text-lg text-accent">{nutrition.calories}</p><p className="label-caps mt-1">kcal</p></div>
+                <div><p className="font-mono text-lg text-text-primary">{nutrition.protein}g</p><p className="label-caps mt-1">Protein</p></div>
+                <div><p className="font-mono text-lg text-text-primary">{nutrition.carbs}g</p><p className="label-caps mt-1">Carbs</p></div>
+                <div><p className="font-mono text-lg text-coral">{nutrition.fat}g</p><p className="label-caps mt-1">Fat</p></div>
               </div>
             )}
             <button onClick={handleAdd} className="btn-primary w-full py-3">
-              Add to {meal}
+              Add to {MEALS.find(m => m.id === meal)?.label}
             </button>
           </div>
         )}
@@ -276,7 +286,7 @@ function FoodSearchModal({ meal, onClose, onAdd }: any) {
   );
 }
 
-function MealSection({ meal, logs, onDelete, onAddClick }: any) {
+function MealSection({ meal, logs, onDelete, delay }: any) {
   const total = logs.reduce((acc: any, l: any) => ({
     calories: acc.calories + l.calories,
     protein: acc.protein + l.protein,
@@ -285,52 +295,26 @@ function MealSection({ meal, logs, onDelete, onAddClick }: any) {
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{meal.emoji}</span>
-          <h3 className="font-semibold text-slate-900 dark:text-white">{meal.label}</h3>
-          {logs.length > 0 && (
-            <span className="badge bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
-              {Math.round(total.calories)} kcal
-            </span>
-          )}
-        </div>
-        <button onClick={() => onAddClick(meal.id)}
-          className="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
-          <Plus size={16} /> Add food
-        </button>
+    <div className="card stagger-item" style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="label-caps text-text-primary">{meal.label}</h3>
+        {logs.length > 0 && (
+          <span className="font-mono text-xs text-accent tabular-nums">
+            {Math.round(total.calories)} kcal
+          </span>
+        )}
       </div>
 
       {logs.length === 0 ? (
-        <div className="text-center py-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
-          <p className="text-sm text-slate-400">No foods logged for {meal.label.toLowerCase()}</p>
-        </div>
+        <p className="text-xs text-muted py-4">Nothing logged yet. Add your first meal.</p>
       ) : (
-        <div className="space-y-2">
-          {logs.map((log: any) => {
-            const foodName = log.food?.name || log.customFood?.name || log.recipe?.name || 'Unknown food';
-            const food = log.food || log.customFood || log.recipe;
-            return (
-              <div key={log.id} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{foodName}</p>
-                  <p className="text-xs text-slate-500">{formatLoggedAmount(log.amount, food)} · P:{Math.round(log.protein)}g C:{Math.round(log.carbs)}g F:{Math.round(log.fat)}g</p>
-                </div>
-                <div className="flex items-center gap-2 ml-2">
-                  <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">{Math.round(log.calories)} kcal</span>
-                  <button onClick={() => onDelete(log.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1">
-                    <Trash size={15} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Meal totals */}
-          <div className="flex justify-between pt-2 text-xs text-slate-500 font-medium">
-            <span>Total: {Math.round(total.calories)} kcal</span>
-            <span>P:{Math.round(total.protein)}g C:{Math.round(total.carbs)}g F:{Math.round(total.fat)}g</span>
+        <div>
+          {logs.map((log: any) => (
+            <FoodLogEntry key={log.id} log={log} onDelete={onDelete} />
+          ))}
+          <div className="flex justify-between pt-3 mt-1 border-t border-border text-xs font-mono text-muted">
+            <span>{Math.round(total.calories)} kcal total</span>
+            <span>P {Math.round(total.protein)}g · C {Math.round(total.carbs)}g · F {Math.round(total.fat)}g</span>
           </div>
         </div>
       )}
@@ -340,9 +324,11 @@ function MealSection({ meal, logs, onDelete, onAddClick }: any) {
 
 export default function FoodLogPage() {
   const [modal, setModal] = useState<string | null>(null);
+  const [modalMeal, setModalMeal] = useState('lunch');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   const { data: logsData, isLoading } = useFoodLogs(date);
+  const { data: dashboardData } = useDashboard();
   const addFoodLog = useAddFoodLog(date);
   const deleteFoodLog = useDeleteFoodLog();
 
@@ -352,68 +338,104 @@ export default function FoodLogPage() {
 
   const handleDelete = (id: string) => deleteFoodLog.mutate(id);
 
+  const openModal = (meal = 'lunch') => {
+    setModalMeal(meal);
+    setModal(meal);
+  };
+
   const byMeal = logsData?.byMeal ?? { breakfast: [], lunch: [], dinner: [], snacks: [] };
   const totals = logsData?.totals ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
+  const calorieGoal = dashboardData?.calories?.goal ?? 2000;
+  const macroGoals = dashboardData?.macros ?? {
+    protein: { goal: 150 },
+    carbs: { goal: 250 },
+    fat: { goal: 65 },
+  };
+  const remaining = calorieGoal - totals.calories;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28">
       {modal && (
-        <FoodSearchModal meal={modal} onClose={() => setModal(null)} onAdd={handleAdd} />
+        <FoodSearchModal
+          meal={modalMeal}
+          onClose={() => setModal(null)}
+          onAdd={handleAdd}
+          onMealChange={setModalMeal}
+        />
       )}
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <header className="stagger-item flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Food Log</h1>
-          <p className="text-slate-500">Track your meals and nutrition</p>
+          <h1 className="font-mono text-xl font-light tracking-wider text-text-primary uppercase">Food Log</h1>
+          <p className="text-sm text-muted mt-1">{format(new Date(date), 'EEEE, MMMM d')}</p>
         </div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
-          className="input w-auto" />
-      </div>
+          className="input w-auto font-mono text-sm" />
+      </header>
 
-      {/* Daily totals */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: 'Calories', value: Math.round(totals.calories), unit: 'kcal', color: 'text-indigo-600' },
-          { label: 'Protein', value: Math.round(totals.protein), unit: 'g', color: 'text-blue-600' },
-          { label: 'Carbs', value: Math.round(totals.carbs), unit: 'g', color: 'text-green-600' },
-          { label: 'Fat', value: Math.round(totals.fat), unit: 'g', color: 'text-amber-600' },
-        ].map(item => (
-          <div key={item.label} className="card text-center py-3">
-            <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
-            <p className="text-xs text-slate-500">{item.label} ({item.unit})</p>
+      <div className="card stagger-item grid sm:grid-cols-[auto_1fr] gap-6 items-center" style={{ animationDelay: '60ms' }}>
+        <CalorieProgressRing
+          consumed={totals.calories}
+          goal={calorieGoal}
+          remaining={remaining}
+          size={160}
+        />
+        <div className="space-y-4 flex-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="label-caps mb-1">Calories</p>
+              <p className="font-mono text-2xl font-light tracking-wider text-accent tabular-nums">
+                {Math.round(totals.calories)}
+              </p>
+            </div>
+            <div>
+              <p className="label-caps mb-1">Remaining</p>
+              <p className={`font-mono text-2xl font-light tracking-wider tabular-nums ${remaining < 0 ? 'text-coral' : 'text-text-primary'}`}>
+                {remaining < 0 ? `−${Math.abs(Math.round(remaining)).toLocaleString()}` : Math.round(remaining).toLocaleString()}
+              </p>
+              {remaining < 0 && <p className="label-caps text-coral mt-1">over</p>}
+            </div>
           </div>
-        ))}
+          <MacroBar label="Protein" consumed={totals.protein} goal={macroGoals.protein.goal} color="#C8F55A" />
+          <MacroBar label="Carbs" consumed={totals.carbs} goal={macroGoals.carbs.goal} color="#F0EDE6" />
+          <MacroBar label="Fat" consumed={totals.fat} goal={macroGoals.fat.goal} color="#FF6B35" />
+        </div>
       </div>
 
-      {/* Meal sections */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-32 rounded-2xl" />)}
+        <div className="space-y-px bg-border">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-32" />)}
         </div>
       ) : (
-        <div className="space-y-4">
-          {MEALS.map(meal => (
+        <div className="space-y-px bg-border">
+          {MEALS.map((meal, i) => (
             <MealSection
               key={meal.id}
               meal={meal}
               logs={byMeal?.[meal.id] || []}
               onDelete={handleDelete}
-              onAddClick={(m: string) => setModal(m)}
+              delay={120 + i * 60}
             />
           ))}
         </div>
       )}
 
-      {/* Custom food link */}
-      <div className="card text-center py-4">
-        <p className="text-sm text-slate-500">
-          Can't find a food?{' '}
-          <Link to="/recipes" className="text-indigo-600 hover:underline font-medium">
-            Create a recipe
-          </Link>
-          {' '}with auto-calculated nutrition from ingredients.
+      <div className="card stagger-item text-center py-4" style={{ animationDelay: '360ms' }}>
+        <p className="text-sm text-muted">
+          Can&apos;t find a food?{' '}
+          <Link to="/recipes" className="link-accent">Create a recipe</Link>
+          {' '}with auto-calculated nutrition.
         </p>
+      </div>
+
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <button
+          type="button"
+          onClick={() => openModal(modalMeal)}
+          className="btn-pill shadow-[0_4px_24px_rgba(200,245,90,0.25)]"
+        >
+          Log Food
+        </button>
       </div>
     </div>
   );
