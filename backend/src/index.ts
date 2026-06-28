@@ -75,7 +75,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
-app.listen only runs locally; Vercel Services mounts the exported app at /_/backend
+// app.listen only runs locally; Vercel Services mounts the exported app at /_/backend
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

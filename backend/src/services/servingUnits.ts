@@ -111,6 +111,7 @@ export function inferUsdaServing(
   portions?: Array<{ gramWeight?: number; modifier?: string; amount?: number }>,
 ): ServingInfo {
   const fromName = inferPieceServingFromName(name);
+  const fromNameUnit = fromName?.servingUnit;
 
   if (portions?.length) {
     const portion = portions.find(p => p.gramWeight && p.gramWeight > 0);
@@ -119,7 +120,7 @@ export function inferUsdaServing(
       const amount = portion.amount && portion.amount > 0 ? portion.amount : 1;
       const gramsPerItem = portion.gramWeight / amount;
 
-      if (modifier.includes('egg') || (fromName?.servingUnit === 'egg')) {
+      if (modifier.includes('egg') || fromNameUnit === 'egg') {
         return { servingSize: gramsPerItem, servingUnit: 'egg' };
       }
       if (
@@ -129,10 +130,10 @@ export function inferUsdaServing(
       ) {
         return {
           servingSize: Math.round(gramsPerItem * 10) / 10,
-          servingUnit: fromName?.servingUnit ?? 'piece',
+          servingUnit: fromNameUnit ?? 'piece',
         };
       }
-      if (modifier.includes('slice') || fromName?.servingUnit === 'slice') {
+      if (modifier.includes('slice') || fromNameUnit === 'slice') {
         return { servingSize: gramsPerItem, servingUnit: 'slice' };
       }
       return { servingSize: gramsPerItem, servingUnit: 'piece' };

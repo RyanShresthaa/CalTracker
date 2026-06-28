@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../lib/prisma';
@@ -30,7 +31,7 @@ const importSchema = z.object({
   externalId: z.string().min(1),
 });
 
-function dedupeFoods<T extends { name: string; externalId?: string; id?: string }>(items: T[]): T[] {
+function dedupeFoods<T extends { name: string; externalId?: string | null; id?: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   return items.filter(item => {
     const key = item.id ?? `${item.externalId ?? item.name}`.toLowerCase();
@@ -49,7 +50,7 @@ export const searchFoods = async (req: AuthRequest, res: Response) => {
 
     const where: any = {};
     if (query) {
-      where.name = { contains: query, mode: 'insensitive' };
+      where.name = { contains: query, mode: Prisma.QueryMode.insensitive };
     }
     if (category) {
       where.category = category;
@@ -62,14 +63,14 @@ export const searchFoods = async (req: AuthRequest, res: Response) => {
     const recipeWhere = req.userId
       ? {
           userId: req.userId,
-          ...(query ? { name: { contains: query, mode: 'insensitive' } } : {}),
+          ...(query ? { name: { contains: query, mode: Prisma.QueryMode.insensitive } } : {}),
         }
       : null;
 
     const customWhere = req.userId
       ? {
           userId: req.userId,
-          ...(query ? { name: { contains: query, mode: 'insensitive' } } : {}),
+          ...(query ? { name: { contains: query, mode: Prisma.QueryMode.insensitive } } : {}),
         }
       : null;
 
