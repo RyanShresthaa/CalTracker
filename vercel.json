@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install && npm run db:generate",
   "experimentalServices": {
     "frontend": {
       "entrypoint": "frontend",
