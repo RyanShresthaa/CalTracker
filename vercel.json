@@ -3,13 +3,17 @@
   "experimentalServices": {
     "frontend": {
       "entrypoint": "frontend",
+      "workspace": "frontend",
       "routePrefix": "/",
       "framework": "vite"
     },
     "backend": {
       "entrypoint": "backend",
+      "workspace": "backend",
       "routePrefix": "/_/backend",
-      "framework": "express"
+      "framework": "express",
+      "installCommand": "npm install",
+      "buildCommand": "npm run vercel-build"
     }
   }
 }
