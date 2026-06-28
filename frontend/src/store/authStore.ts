@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '../lib/api';
+import { applyTheme, readStoredDarkMode } from '../lib/themeApply';
 
 interface User {
   id: string;
@@ -53,9 +54,10 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const res = await authAPI.login({ email, password });
-          const { token, user } = res.data;
+          const { token } = res.data;
           localStorage.setItem('token', token);
-          set({ token, user, isLoading: false });
+          set({ token, isLoading: false });
+          await get().refreshUser();
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -67,6 +69,7 @@ export const useAuthStore = create<AuthState>()(
           await authAPI.logout();
         } catch {}
         localStorage.removeItem('token');
+        localStorage.removeItem('auth-storage');
         set({ user: null, token: null });
       },
 
@@ -75,7 +78,9 @@ export const useAuthStore = create<AuthState>()(
           const res = await authAPI.getMe();
           set({ user: res.data });
         } catch {
-          get().logout();
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth-storage');
+          set({ user: null, token: null });
         }
       },
     }),
@@ -96,24 +101,25 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      darkMode: true,
-      toggleDarkMode: () => set((s) => {
-        const next = !s.darkMode;
-        document.documentElement.classList.toggle('dark', next);
-        return { darkMode: next };
-      }),
-      setDarkMode: (val) => {
-        document.documentElement.classList.toggle('dark', val);
-        set({ darkMode: val });
-      },
+      darkMode: readStoredDarkMode(),
+      toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
+      setDarkMode: (darkMode) => set({ darkMode }),
     }),
     {
       name: 'theme-storage',
+      partialize: (state) => ({ darkMode: state.darkMode }),
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          document.documentElement.classList.toggle('dark', state.darkMode);
-        }
+        if (state) applyTheme(state.darkMode);
       },
-    }
-  )
+    },
+  ),
 );
+
+useThemeStore.subscribe((state, prev) => {
+  if (state.darkMode !== prev.darkMode) {
+    applyTheme(state.darkMode);
+  }
+});
+
+// Sync before first paint (store module load)
+applyTheme(readStoredDarkMode());

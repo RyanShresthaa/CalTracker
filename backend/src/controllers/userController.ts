@@ -4,6 +4,7 @@ import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 import { calculateBMR, calculateTDEE, calculateCalorieTargets, calculateBMI, getBMICategory, estimateBodyFat, resolveCalorieBudget, effectiveGoal } from '../utils/calculations';
+import { DEFAULT_SETTINGS, toAuthUser } from '../utils/userSerializer';
 
 export const getUserProfile = async (req: AuthRequest, res: Response) => {
   try {
@@ -17,7 +18,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
     if (user.height && user.currentWeight && user.age && user.sex && user.activityLevel && user.goal) {
       const bmr = calculateBMR(user.currentWeight, user.height, user.age, user.sex);
       const tdee = calculateTDEE(bmr, user.activityLevel);
-      const targets = calculateCalorieTargets(tdee, user.goal);
+      const targets = calculateCalorieTargets(tdee);
       const bmi = calculateBMI(user.currentWeight, user.height);
       const bodyFat = estimateBodyFat(bmi, user.age, user.sex);
       const goalForMacros = effectiveGoal(user.currentWeight, user.goalWeight, user.goal);
@@ -26,11 +27,9 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
       calculated = {
         bmr: Math.round(bmr),
         tdee: budget?.maintenanceCalories ?? Math.round(tdee),
-        estimatedExercise: budget?.estimatedExercise ?? null,
         ...targets,
         dailyGoal: budget?.dailyBudget ?? null,
         baseGoal: budget?.baseGoal ?? null,
-        neatBonus: budget?.neatBonus ?? null,
         effectiveGoal: goalForMacros,
         bmi,
         bmiCategory: getBMICategory(bmi),
@@ -62,10 +61,10 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     const user = await prisma.user.update({
       where: { id: req.userId },
       data,
+      include: { settings: true },
     });
 
-    const { password, ...safeUser } = user as any;
-    return res.json(safeUser);
+    return res.json(toAuthUser(user));
   } catch (error) {
     return res.status(500).json({ error: 'Failed to update profile' });
   }
@@ -95,21 +94,55 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
 export const getSettings = async (req: AuthRequest, res: Response) => {
   try {
-    const settings = await prisma.settings.findUnique({ where: { userId: req.userId } });
-    return res.json(settings);
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      include: { settings: true },
+    });
+
+    const budget = user ? resolveCalorieBudget(user, 0) : null;
+    const suggestedCalorieGoal = budget?.dailyBudget ?? null;
+
+    if (!user?.settings) {
+      return res.json({ ...DEFAULT_SETTINGS, suggestedCalorieGoal });
+    }
+    const { id, userId, createdAt, updatedAt, ...prefs } = user.settings;
+    return res.json({ ...prefs, suggestedCalorieGoal });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch settings' });
   }
 };
 
+const SETTINGS_FIELDS = [
+  'darkMode', 'units', 'waterGoal', 'calorieGoal', 'proteinGoal',
+  'carbsGoal', 'fatGoal', 'notifWater', 'notifMeals', 'notifWorkout', 'notifWeight',
+] as const;
+
 export const updateSettings = async (req: AuthRequest, res: Response) => {
   try {
+    const data: Record<string, unknown> = {};
+    for (const key of SETTINGS_FIELDS) {
+      if (req.body[key] !== undefined) data[key] = req.body[key];
+    }
+
+    if (data.calorieGoal !== undefined && data.calorieGoal !== null) {
+      const goal = Number(data.calorieGoal);
+      if (Number.isNaN(goal) || goal < 800 || goal > 10000) {
+        return res.status(400).json({ error: 'Calorie goal must be between 800 and 10,000 kcal' });
+      }
+      data.calorieGoal = goal;
+    }
+
     const settings = await prisma.settings.upsert({
       where: { userId: req.userId },
-      update: req.body,
-      create: { userId: req.userId!, ...req.body },
+      update: data,
+      create: { userId: req.userId!, ...data },
     });
-    return res.json(settings);
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    const budget = user ? resolveCalorieBudget(user, 0) : null;
+
+    const { id, userId, createdAt, updatedAt, ...prefs } = settings;
+    return res.json({ ...prefs, suggestedCalorieGoal: budget?.dailyBudget ?? null });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to update settings' });
   }

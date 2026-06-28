@@ -62,3 +62,50 @@ export function calcTotalVolume(
 export function muscleGroupLabel(id?: string | null) {
   return GYM_MUSCLE_GROUPS.find(g => g.id === id)?.label ?? id;
 }
+
+export function exerciseVolumeFromSets(sets: { weight: number; reps: number }[]): number {
+  return Math.round(sets.reduce((sum, s) => sum + s.weight * s.reps, 0) * 10) / 10;
+}
+
+export function summarizeExerciseSets(sets: { weight: number; reps: number }[]) {
+  if (!sets.length) {
+    return { setCount: 0, totalReps: 0, maxWeight: 0, volume: 0, topSet: null as { weight: number; reps: number } | null };
+  }
+  const totalReps = sets.reduce((sum, s) => sum + s.reps, 0);
+  const maxWeight = Math.max(...sets.map(s => s.weight));
+  const topSet = sets.reduce(
+    (best, s) => (s.weight * s.reps > best.weight * best.reps ? s : best),
+    sets[0],
+  );
+  return {
+    setCount: sets.length,
+    totalReps,
+    maxWeight,
+    volume: exerciseVolumeFromSets(sets),
+    topSet,
+  };
+}
+
+export function summarizeSession(exercises: { sets?: { weight: number; reps: number }[] }[]) {
+  let totalSets = 0;
+  let totalReps = 0;
+  let totalVolume = 0;
+  let maxWeight = 0;
+
+  for (const ex of exercises) {
+    const sets = ex.sets ?? [];
+    const stats = summarizeExerciseSets(sets);
+    totalSets += stats.setCount;
+    totalReps += stats.totalReps;
+    totalVolume += stats.volume;
+    maxWeight = Math.max(maxWeight, stats.maxWeight);
+  }
+
+  return {
+    exerciseCount: exercises.length,
+    totalSets,
+    totalReps,
+    totalVolume: Math.round(totalVolume * 10) / 10,
+    maxWeight,
+  };
+}

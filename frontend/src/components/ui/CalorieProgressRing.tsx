@@ -11,14 +11,14 @@ export default function CalorieProgressRing({
   consumed,
   goal,
   remaining,
-  size = 200,
+  size = 180,
 }: CalorieProgressRingProps) {
   const targetPct = goal > 0 ? Math.min(consumed / goal, 1) : 0;
   const [animatedPct, setAnimatedPct] = useState(0);
   const isOver = remaining < 0;
-  const ringColor = isOver ? 'var(--coral)' : 'var(--accent)';
+  const ringColor = isOver ? 'hsl(var(--destructive))' : 'hsl(var(--foreground))';
   const degrees = animatedPct * 360;
-  const innerSize = size - 12;
+  const innerSize = size - 10;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setAnimatedPct(targetPct));
@@ -26,37 +26,30 @@ export default function CalorieProgressRing({
   }, [targetPct]);
 
   return (
-    <div
-      className="relative shrink-0 animate-ring-pulse"
-      style={{ width: size, height: size }}
-    >
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
       <div
-        className="absolute inset-0 rounded-full transition-[background] duration-[600ms] ease-out"
+        className="absolute inset-0 rounded-full transition-[background] duration-500 ease-out"
         style={{
-          background: `conic-gradient(${ringColor} ${degrees}deg, var(--ring-track) ${degrees}deg)`,
+          background: `conic-gradient(${ringColor} ${degrees}deg, hsl(var(--ring-track)) ${degrees}deg)`,
         }}
       />
       <div
-        className="absolute flex flex-col items-center justify-center bg-bg rounded-full"
-        style={{
-          inset: 6,
-          width: innerSize,
-          height: innerSize,
-        }}
+        className="absolute flex flex-col items-center justify-center rounded-full bg-card"
+        style={{ inset: 5, width: innerSize, height: innerSize }}
       >
         {isOver ? (
           <>
-            <span className="font-mono font-light text-[clamp(2rem,5vw,3.5rem)] tracking-wider text-coral leading-none">
+            <span className="text-3xl font-semibold tabular-nums leading-none text-destructive">
               −{Math.abs(Math.round(remaining)).toLocaleString()}
             </span>
-            <span className="label-caps mt-2 text-coral">over</span>
+            <span className="text-xs text-muted-foreground mt-1">over</span>
           </>
         ) : (
           <>
-            <span className="font-mono font-light text-[clamp(2rem,5vw,3.5rem)] tracking-wider text-accent leading-none">
+            <span className="text-3xl font-semibold tabular-nums leading-none text-foreground">
               {Math.round(remaining).toLocaleString()}
             </span>
-            <span className="label-caps mt-2">left</span>
+            <span className="text-xs text-muted-foreground mt-1">kcal left</span>
           </>
         )}
       </div>

@@ -1,8 +1,14 @@
+import path from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   define: {
     'import.meta.env.VITE_VERCEL': JSON.stringify(process.env.VERCEL === '1'),
   },
@@ -19,8 +25,8 @@ export default defineConfig({
         name: 'CalorieTracker',
         short_name: 'CalorieTracker',
         description: 'Track calories, macros, water, workouts, and recipes.',
-        theme_color: '#0F0F0F',
-        background_color: '#0F0F0F',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
         scope: '/',
@@ -59,6 +65,17 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-dev-runtime',
+      '@tanstack/react-query',
+      'sonner',
+      'lucide-react',
+      'recharts',
+    ],
   },
   preview: {
     host: true,

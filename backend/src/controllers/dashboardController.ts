@@ -72,19 +72,32 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     const burned = activityLogs.reduce((acc, a) => acc + a.caloriesBurned, 0);
     const waterIntake = waterLogs.reduce((acc, w) => acc + w.amount, 0);
 
-    // Calorie budget: profile activity + weight goal + logged exercise today
-    let calorieGoal = user.settings?.calorieGoal || 2000;
+    // Calorie budget: custom override or profile-based calculation
+    const customCalorieGoal = user.settings?.calorieGoal ?? null;
+    let calorieGoal = customCalorieGoal ?? user.settings?.calorieGoal ?? 2000;
     let baseGoal = calorieGoal;
     let exerciseBonus = 0;
     let macroGoals = { protein: 150, carbs: 250, fat: 65 };
+    let suggestedCalorieGoal: number | null = null;
+    let isCustomCalorieGoal = customCalorieGoal != null;
 
     const budget = resolveCalorieBudget(user, burned);
     if (budget != null) {
-      calorieGoal = budget.dailyBudget;
-      baseGoal = budget.baseGoal;
-      exerciseBonus = budget.exerciseBonus;
+      suggestedCalorieGoal = budget.dailyBudget;
+      if (customCalorieGoal != null) {
+        calorieGoal = customCalorieGoal;
+        baseGoal = customCalorieGoal;
+      } else {
+        calorieGoal = budget.dailyBudget;
+        baseGoal = budget.baseGoal;
+        exerciseBonus = budget.exerciseBonus;
+      }
       const goalForMacros = effectiveGoal(user.currentWeight, user.goalWeight, user.goal);
-      macroGoals = calculateMacros(calorieGoal, goalForMacros);
+      macroGoals = {
+        protein: user.settings?.proteinGoal ?? calculateMacros(calorieGoal, goalForMacros).protein,
+        carbs: user.settings?.carbsGoal ?? calculateMacros(calorieGoal, goalForMacros).carbs,
+        fat: user.settings?.fatGoal ?? calculateMacros(calorieGoal, goalForMacros).fat,
+      };
     }
 
     // Meals breakdown
@@ -110,6 +123,8 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
         baseGoal: Math.round(baseGoal),
         exerciseBonus: Math.round(exerciseBonus),
         goal: Math.round(calorieGoal),
+        suggestedGoal: suggestedCalorieGoal != null ? Math.round(suggestedCalorieGoal) : null,
+        isCustomGoal: isCustomCalorieGoal,
         consumed: Math.round(consumed.calories),
         burned: Math.round(burned),
         remaining: Math.round(calorieGoal - consumed.calories),

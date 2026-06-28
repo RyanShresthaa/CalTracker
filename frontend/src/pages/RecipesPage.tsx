@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Plus, Trash, PencilSimple, X, MagnifyingGlass, BookOpen, Check,
-} from 'phosphor-react';
+  Plus, Trash, Pencil, X, Search, BookOpen, Check,
+} from 'lucide-react';
 import {
   useRecipes, useCreateRecipe, useUpdateRecipe, useDeleteRecipe, useFoodSearch,
 } from '../lib/hooks';
 import { foodsAPI } from '../lib/api';
-import toast from 'react-hot-toast';
+import PageHeader from '../components/ui/PageHeader';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '../components/ui/dialog';
+import { toast } from 'sonner';
 
 type IngredientDraft = {
   key: string;
@@ -206,188 +216,193 @@ function RecipeEditor({ recipe, onClose }: { recipe?: any; onClose: () => void }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-900 dark:text-white">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogHeader className="p-4 border-b border-border">
+          <DialogTitle className="page-title !text-base">
             {recipe ? 'Edit Recipe' : 'New Recipe'}
-          </h3>
-          <button onClick={onClose} className="btn-ghost p-1"><X size={20} /></button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
-              <label className="label text-xs">Recipe name</label>
-              <input value={name} onChange={e => setName(e.target.value)} className="input" placeholder="e.g. Momo, Dal Bhat, Protein Oats" />
+              <Label>Recipe name</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} className="mt-1.5" placeholder="e.g. Momo, Dal Bhat, Protein Oats" />
             </div>
             <div className="sm:col-span-2">
-              <label className="label text-xs">Description (optional)</label>
-              <input value={description} onChange={e => setDescription(e.target.value)} className="input" placeholder="Notes or cooking tips" />
+              <Label>Description (optional)</Label>
+              <Input value={description} onChange={e => setDescription(e.target.value)} className="mt-1.5" placeholder="Notes or cooking tips" />
             </div>
             <div>
-              <label className="label text-xs">Servings</label>
-              <input type="number" min={1} step={1} value={servings} onChange={e => setServings(Number(e.target.value))} className="input" />
+              <Label>Servings</Label>
+              <Input type="number" min={1} step={1} value={servings} onChange={e => setServings(Number(e.target.value))} className="mt-1.5" />
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 text-center bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-3">
-            <div><p className="text-lg font-bold text-indigo-600">{perServing.calories}</p><p className="text-xs text-slate-500">kcal / serving</p></div>
-            <div><p className="text-lg font-bold text-blue-600">{perServing.protein}g</p><p className="text-xs text-slate-500">Protein</p></div>
-            <div><p className="text-lg font-bold text-green-600">{perServing.carbs}g</p><p className="text-xs text-slate-500">Carbs</p></div>
-            <div><p className="text-lg font-bold text-amber-600">{perServing.fat}g</p><p className="text-xs text-slate-500">Fat</p></div>
+          <div className="grid grid-cols-4 gap-2 text-center border border-border p-3">
+            <div><p className="text-lg text-accent">{perServing.calories}</p><p className="label-caps mt-1">kcal / serving</p></div>
+            <div><p className="text-lg text-foreground">{perServing.protein}g</p><p className="label-caps mt-1">Protein</p></div>
+            <div><p className="text-lg text-foreground">{perServing.carbs}g</p><p className="label-caps mt-1">Carbs</p></div>
+            <div><p className="text-lg text-foreground">{perServing.fat}g</p><p className="label-caps mt-1">Fat</p></div>
           </div>
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-muted text-center font-mono">
             Total batch: {Math.round(totals.calories)} kcal · {Math.round(totals.weight)}g · {ingredients.length} ingredients
           </p>
 
           <div>
-            <label className="label text-xs">Add ingredients</label>
-            <div className="relative mb-2">
-              <MagnifyingGlass size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input value={query} onChange={e => setQuery(e.target.value)} className="input pl-10" placeholder="Search foods (USDA, Open Food Facts, your foods…)" />
+            <Label>Add ingredients</Label>
+            <div className="relative mb-2 mt-1.5">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted" />
+              <Input value={query} onChange={e => setQuery(e.target.value)} className="pl-10" placeholder="Search foods (USDA, Open Food Facts, your foods…)" />
             </div>
-            {searching && <p className="text-xs text-slate-400 mb-2">Searching…</p>}
+            {searching && <p className="text-xs text-muted mb-2">Searching…</p>}
             {debouncedQuery && searchResults.length > 0 && (
-              <div className="border border-slate-200 dark:border-slate-700 rounded-xl mb-2 max-h-40 overflow-y-auto">
+              <div className="border border-border mb-2 max-h-40 overflow-y-auto">
                 {searchResults.filter((f: any) => !f.isRecipe).slice(0, 8).map((food: any) => (
-                  <button key={food.id ?? `${food.externalSource}-${food.externalId}`} onClick={() => addFromSearch(food)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 last:border-0">
-                    <span className="font-medium text-slate-800 dark:text-slate-200">{food.name}</span>
-                    <span className="text-xs text-slate-500 ml-2">{Math.round(food.calories)} kcal / {food.servingSize}{food.servingUnit || 'g'}</span>
+                  <button
+                    key={food.id ?? `${food.externalSource}-${food.externalId}`}
+                    type="button"
+                    onClick={() => addFromSearch(food)}
+                    className="w-full text-left px-4 py-3 text-sm row-hover border-b border-border last:border-0 transition-colors"
+                  >
+                    <span className="font-medium text-foreground">{food.name}</span>
+                    <span className="text-xs text-muted ml-2 font-mono">
+                      {Math.round(food.calories)} kcal / {food.servingSize}{food.servingUnit || 'g'}
+                    </span>
                   </button>
                 ))}
               </div>
             )}
-            <button onClick={() => setShowManual(v => !v)} className="text-sm text-indigo-600 hover:underline">
+            <button type="button" onClick={() => setShowManual(v => !v)} className="text-sm link-accent">
               {showManual ? 'Hide manual entry' : "+ Can't find it? Add ingredient manually"}
             </button>
             {showManual && (
-              <div className="mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 space-y-3">
-                <p className="text-xs text-slate-500 leading-relaxed">
+              <div className="mt-2 callout space-y-3">
+                <p className="text-xs text-muted leading-relaxed">
                   Can't find it in search? Enter the ingredient yourself. Nutrition values should be{' '}
-                  <span className="font-medium text-slate-600 dark:text-slate-400">per 100g</span>{' '}
+                  <span className="font-medium text-foreground">per 100g</span>{' '}
                   (from the package label or a nutrition site).
                 </p>
 
                 <div>
-                  <label className="label text-xs">Ingredient name</label>
-                  <input
+                  <Label>Ingredient name</Label>
+                  <Input
                     value={manual.name}
                     onChange={e => setManual({ ...manual, name: e.target.value })}
-                    className="input text-sm"
+                    className="text-sm mt-1.5"
                     placeholder="e.g. Rice flour, olive oil, chicken breast"
                   />
                 </div>
 
                 <div>
-                  <label className="label text-xs">Amount in this recipe (grams)</label>
-                  <input
+                  <Label>Amount in this recipe (grams)</Label>
+                  <Input
                     type="number"
                     min={1}
                     value={manual.amount}
                     onChange={e => setManual({ ...manual, amount: Number(e.target.value) })}
-                    className="input text-sm"
+                    className="text-sm mt-1.5"
                     placeholder="150"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-muted mt-1">
                     How many grams of this ingredient you use for the whole batch
                   </p>
                 </div>
 
                 <div>
-                  <p className="label text-xs mb-2">Nutrition per 100g</p>
+                  <p className="label mb-2">Nutrition per 100g</p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="label text-[11px] text-slate-500">Calories (kcal)</label>
-                      <input
+                      <Label>Calories (kcal)</Label>
+                      <Input
                         type="number"
                         min={0}
                         value={manual.caloriesPer100}
                         onChange={e => setManual({ ...manual, caloriesPer100: Number(e.target.value) })}
-                        className="input text-sm"
+                        className="text-sm mt-1.5"
                         placeholder="364"
                       />
                     </div>
                     <div>
-                      <label className="label text-[11px] text-slate-500">Protein (g)</label>
-                      <input
+                      <Label>Protein (g)</Label>
+                      <Input
                         type="number"
                         min={0}
                         step={0.1}
                         value={manual.proteinPer100}
                         onChange={e => setManual({ ...manual, proteinPer100: Number(e.target.value) })}
-                        className="input text-sm"
+                        className="text-sm mt-1.5"
                         placeholder="6"
                       />
                     </div>
                     <div>
-                      <label className="label text-[11px] text-slate-500">Carbs (g)</label>
-                      <input
+                      <Label>Carbs (g)</Label>
+                      <Input
                         type="number"
                         min={0}
                         step={0.1}
                         value={manual.carbsPer100}
                         onChange={e => setManual({ ...manual, carbsPer100: Number(e.target.value) })}
-                        className="input text-sm"
+                        className="text-sm mt-1.5"
                         placeholder="76"
                       />
                     </div>
                     <div>
-                      <label className="label text-[11px] text-slate-500">Fat (g)</label>
-                      <input
+                      <Label>Fat (g)</Label>
+                      <Input
                         type="number"
                         min={0}
                         step={0.1}
                         value={manual.fatPer100}
                         onChange={e => setManual({ ...manual, fatPer100: Number(e.target.value) })}
-                        className="input text-sm"
+                        className="text-sm mt-1.5"
                         placeholder="1"
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-1.5">
+                  <p className="text-[11px] text-muted mt-1.5">
                     Example: white rice is ~130 kcal, 2.7g protein, 28g carbs, 0.3g fat per 100g cooked
                   </p>
                 </div>
 
-                <button onClick={addManual} className="btn-secondary text-sm w-full">Add ingredient</button>
+                <Button type="button" onClick={addManual} variant="outline" size="sm" className="w-full">Add ingredient</Button>
               </div>
             )}
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Ingredients</h4>
+            <h4 className="card-section-title !mb-0 !pb-0 !border-0">Ingredients</h4>
             {ingredients.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-6">Search and add foods to build your recipe</p>
+              <p className="text-sm text-muted text-center py-6">Search and add foods to build your recipe</p>
             ) : ingredients.map(ing => {
               const n = ingredientNutrition(ing);
               return (
-                <div key={ing.key} className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50">
+                <div key={ing.key} className="list-row gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{ing.name}</p>
-                    <p className="text-xs text-slate-500">{n.calories} kcal · P:{n.protein}g C:{n.carbs}g F:{n.fat}g</p>
+                    <p className="text-sm font-medium text-foreground truncate">{ing.name}</p>
+                    <p className="text-xs text-muted font-mono">{n.calories} kcal · P:{n.protein}g C:{n.carbs}g F:{n.fat}g</p>
                   </div>
-                  <input type="number" min={1} value={ing.amount} onChange={e => setIngredients(prev => prev.map(x => x.key === ing.key ? { ...x, amount: Number(e.target.value) } : x))}
-                    className="input w-20 text-center text-sm py-1.5" />
-                  <span className="text-xs text-slate-500">g</span>
-                  <button onClick={() => setIngredients(prev => prev.filter(x => x.key !== ing.key))} className="text-slate-400 hover:text-red-500 p-1">
-                    <Trash size={16} />
-                  </button>
+                  <Input type="number" min={1} value={ing.amount} onChange={e => setIngredients(prev => prev.map(x => x.key === ing.key ? { ...x, amount: Number(e.target.value) } : x))}
+                    className="w-20 text-center text-sm h-8" />
+                  <span className="text-xs text-muted">g</span>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setIngredients(prev => prev.filter(x => x.key !== ing.key))} className="h-8 w-8 text-muted hover:text-destructive">
+                    <Trash className="h-4 w-4" />
+                  </Button>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
-          <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-          <button onClick={save} disabled={saving} className="btn-primary flex-1">
+        <div className="p-4 border-t border-border flex gap-3">
+          <Button type="button" onClick={onClose} variant="outline" className="flex-1">Cancel</Button>
+          <Button type="button" onClick={save} disabled={saving} className="flex-1">
             {saving ? 'Saving…' : recipe ? 'Update Recipe' : 'Save Recipe'}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -402,71 +417,73 @@ export default function RecipesPage() {
         <RecipeEditor recipe={editor === 'new' ? undefined : editor} onClose={() => setEditor(null)} />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Recipes</h1>
-          <p className="text-slate-500">Create recipes — calories are calculated from ingredients</p>
-        </div>
-        <button onClick={() => setEditor('new')} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> New Recipe
-        </button>
-      </div>
+      <PageHeader
+        title="My Recipes"
+        subtitle="Create recipes — calories are calculated from ingredients"
+        action={(
+          <Button type="button" onClick={() => setEditor('new')}>
+            <Plus className="h-[18px] w-[18px]" /> New Recipe
+          </Button>
+        )}
+      />
 
       {isLoading ? (
         <div className="grid sm:grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-36 rounded-2xl" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36" />)}
         </div>
       ) : recipes.length === 0 ? (
-        <div className="card text-center py-16">
-          <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-          <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">No recipes yet</h3>
-          <p className="text-sm text-slate-500 mb-4 max-w-md mx-auto">
+        <div className="empty-state">
+          <BookOpen size={48} className="mx-auto text-muted mb-4 opacity-40" />
+          <h3 className="page-title !text-base mb-2">No recipes yet</h3>
+          <p className="text-sm text-muted mb-4 max-w-md mx-auto">
             Build your own dishes by combining ingredients. We'll calculate calories, protein, carbs, and fat automatically.
           </p>
-          <button onClick={() => setEditor('new')} className="btn-primary inline-flex items-center gap-2">
-            <Plus size={18} /> Create your first recipe
-          </button>
+          <Button type="button" onClick={() => setEditor('new')}>
+            <Plus className="h-[18px] w-[18px]" /> Create your first recipe
+          </Button>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recipes.map((recipe: any) => (
-            <div key={recipe.id} className="card hover:shadow-md transition-shadow">
+            <Card key={recipe.id} className="card-hover">
+              <CardContent className="pt-6">
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="min-w-0">
-                  <h3 className="font-semibold text-slate-900 dark:text-white truncate">{recipe.name}</h3>
-                  {recipe.description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{recipe.description}</p>}
+                  <h3 className="font-medium text-foreground truncate">{recipe.name}</h3>
+                  {recipe.description && <p className="text-xs text-muted mt-0.5 line-clamp-2">{recipe.description}</p>}
                 </div>
-                <span className="badge bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 shrink-0">
+                <Badge variant="default" className="shrink-0">
                   {recipe._count?.ingredients ?? recipe.ingredients?.length ?? 0} items
-                </span>
+                </Badge>
               </div>
-              <div className="grid grid-cols-4 gap-1 text-center mb-4">
-                <div><p className="font-bold text-indigo-600">{Math.round(recipe.calories)}</p><p className="text-[10px] text-slate-500">kcal</p></div>
-                <div><p className="font-bold text-blue-600">{recipe.protein}g</p><p className="text-[10px] text-slate-500">P</p></div>
-                <div><p className="font-bold text-green-600">{recipe.carbs}g</p><p className="text-[10px] text-slate-500">C</p></div>
-                <div><p className="font-bold text-amber-600">{recipe.fat}g</p><p className="text-[10px] text-slate-500">F</p></div>
+              <div className="grid grid-cols-4 gap-1 text-center mb-4 border border-border p-2">
+                <div><p className="text-sm text-accent">{Math.round(recipe.calories)}</p><p className="label-caps mt-0.5">kcal</p></div>
+                <div><p className="text-sm text-foreground">{recipe.protein}g</p><p className="label-caps mt-0.5">P</p></div>
+                <div><p className="text-sm text-foreground">{recipe.carbs}g</p><p className="label-caps mt-0.5">C</p></div>
+                <div><p className="text-sm text-muted-foreground">{recipe.fat}g</p><p className="label-caps mt-0.5">F</p></div>
               </div>
-              <p className="text-xs text-slate-500 mb-3">
+              <p className="text-xs text-muted mb-3 font-mono">
                 Per serving · {Math.round(recipe.servingSize)}g · {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''} total
               </p>
               <div className="flex gap-2">
-                <button onClick={() => setEditor(recipe)} className="btn-secondary flex-1 text-sm py-2 flex items-center justify-center gap-1">
-                  <PencilSimple size={16} /> Edit
-                </button>
-                <button onClick={() => { if (confirm('Delete this recipe?')) deleteRecipe.mutate(recipe.id); }}
-                  className="btn-ghost text-red-500 px-3 py-2">
-                  <Trash size={16} />
-                </button>
+                <Button type="button" onClick={() => setEditor(recipe)} variant="outline" size="sm" className="flex-1">
+                  <Pencil className="h-4 w-4" /> Edit
+                </Button>
+                <Button type="button" variant="ghost" size="icon" onClick={() => { if (confirm('Delete this recipe?')) deleteRecipe.mutate(recipe.id); }}
+                  className="text-muted hover:text-destructive">
+                  <Trash className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
-      <div className="card bg-violet-50 dark:bg-violet-900/20 border-violet-100 dark:border-violet-800">
-        <p className="text-sm text-violet-800 dark:text-violet-300">
+      <div className="callout">
+        <p className="text-sm text-foreground">
           <strong>Tip:</strong> Saved recipes appear in{' '}
-          <Link to="/food-log" className="underline font-medium">Food Log</Link>
+          <Link to="/food-log" className="link-accent">Food Log</Link>
           {' '}when you search — log them by servings just like any other food.
         </p>
       </div>

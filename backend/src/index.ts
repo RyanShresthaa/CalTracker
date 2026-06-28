@@ -1,12 +1,11 @@
+import './env';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { registerRoutes } from './registerRoutes';
-
-dotenv.config();
+import prisma from './lib/prisma';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -71,12 +70,23 @@ if (!process.env.VERCEL) {
   app.use(morgan('dev'));
 }
 
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    database: process.env.DATABASE_URL ? 'configured' : 'missing',
-  });
+app.get('/health', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+    });
+  } catch (err) {
+    console.error('Health check DB error:', err);
+    res.status(503).json({
+      status: 'degraded',
+      timestamp: new Date().toISOString(),
+      database: 'error',
+      message: err instanceof Error ? err.message : 'Database unreachable',
+    });
+  }
 });
 
 try {
@@ -95,8 +105,21 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(
+        `\nPort ${PORT} is already in use. Another backend is still running.\n` +
+        `  • Stop it with Ctrl+C in that terminal, or\n` +
+        `  • Run: npm run dev  (predev frees the port automatically), or\n` +
+        `  • Run: npx kill-port ${PORT}\n`,
+      );
+      process.exit(1);
+    }
+    throw err;
   });
 }
 

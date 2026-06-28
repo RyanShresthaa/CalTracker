@@ -12,7 +12,7 @@ export default function MacroBar({ label, consumed, goal, color }: MacroBarProps
     <div>
       <div className="flex justify-between items-baseline mb-2">
         <span className="label-caps">{label}</span>
-        <span className="font-mono text-xs text-muted">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {Math.round(consumed)}g / {goal}g
         </span>
       </div>

@@ -1,4 +1,10 @@
 import axios from 'axios';
+import { queryClient } from './queryClient';
+
+function clearAuthSession() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('auth-storage');
+}
 
 function resolveApiBase(): string {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
@@ -39,12 +45,23 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    const status = error.response?.status;
+    const url = String(error.config?.url ?? '');
+    const isPublicAuth = /\/auth\/(login|register|forgot-password|reset-password)/.test(url);
+
+    if (status === 401 && !isPublicAuth) {
+      clearAuthSession();
+      queryClient.clear();
+      const path = window.location.pathname;
+      const onAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].some(
+        (p) => path === p || path.startsWith(`${p}/`),
+      );
+      if (!onAuthPage) {
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
@@ -116,6 +133,25 @@ export const activitiesAPI = {
   getHistory: (period?: number) => api.get('/activities/history', { params: { period } }),
   add: (data: any) => api.post('/activities', data),
   delete: (id: string) => api.delete(`/activities/${id}`),
+};
+
+// Workouts
+export const workoutsAPI = {
+  getInsights: (period?: number) => api.get('/workouts/insights', { params: { period } }),
+  getHistory: () => api.get('/workouts/history'),
+  getActive: () => api.get('/workouts/active'),
+  getMyExercises: () => api.get('/workouts/exercises'),
+  getExerciseHistory: (name: string) => api.get('/workouts/exercise-history', { params: { name } }),
+  start: (name?: string) => api.post('/workouts/start', { name }),
+  addExercise: (sessionId: string, data: { name: string; muscleGroup: string }) =>
+    api.post(`/workouts/${sessionId}/exercises`, data),
+  addSet: (sessionId: string, exerciseId: string, data: { weight: number; reps: number }) =>
+    api.post(`/workouts/${sessionId}/exercises/${exerciseId}/sets`, data),
+  deleteSet: (sessionId: string, exerciseId: string, setId: string) =>
+    api.delete(`/workouts/${sessionId}/exercises/${exerciseId}/sets/${setId}`),
+  complete: (sessionId: string, data?: { durationMin?: number; notes?: string }) =>
+    api.patch(`/workouts/${sessionId}/complete`, data ?? {}),
+  cancel: (sessionId: string) => api.delete(`/workouts/${sessionId}`),
 };
 
 // User

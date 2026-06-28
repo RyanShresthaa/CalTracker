@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { useAuthStore, useThemeStore } from './store/authStore';
-import { themeColorMeta } from './lib/theme';
+import { Toaster } from '@/components/ui/sonner';
+import { useAuthStore } from './store/authStore';
+import ThemeSync from './components/ThemeSync';
+import AuthBootstrap from './components/AuthBootstrap';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -15,6 +15,7 @@ import FoodLogPage from './pages/FoodLogPage';
 import WaterPage from './pages/WaterPage';
 import WeightPage from './pages/WeightPage';
 import ActivityPage from './pages/ActivityPage';
+import WorkoutPage from './pages/WorkoutPage';
 import ProgressPage from './pages/ProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import RecipesPage from './pages/RecipesPage';
@@ -42,25 +43,13 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const { darkMode } = useThemeStore();
   const { token, user } = useAuthStore();
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', themeColorMeta(darkMode));
-  }, [darkMode]);
 
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          className: '!bg-surface !text-text-primary !border !border-border',
-          duration: 3000,
-          style: { borderRadius: 0, boxShadow: 'none' },
-        }}
-      />
+      <ThemeSync />
+      <AuthBootstrap />
+      <Toaster position="top-right" richColors={false} closeButton />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -85,6 +74,7 @@ export default function App() {
           <Route path="water" element={<WaterPage />} />
           <Route path="weight" element={<WeightPage />} />
           <Route path="activity" element={<ActivityPage />} />
+          <Route path="workout" element={<WorkoutPage />} />
           <Route path="progress" element={<ProgressPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

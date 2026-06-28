@@ -10,6 +10,12 @@ export const queryKeys = {
   weight: (period: number) => ['weight', period] as const,
   activities: (date?: string) => ['activities', date ?? 'today'] as const,
   activitiesHistory: (period: number) => ['activities', 'history', period] as const,
+  workouts: {
+    insights: (period: number) => ['workouts', 'insights', period] as const,
+    history: ['workouts', 'history'] as const,
+    active: ['workouts', 'active'] as const,
+    myExercises: ['workouts', 'myExercises'] as const,
+  },
   settings: ['settings'] as const,
   admin: {
     stats: ['admin', 'stats'] as const,
@@ -26,6 +32,7 @@ export function invalidateTrackerQueries() {
     queryClient.invalidateQueries({ queryKey: ['water'] }),
     queryClient.invalidateQueries({ queryKey: ['weight'] }),
     queryClient.invalidateQueries({ queryKey: ['activities'] }),
+    queryClient.invalidateQueries({ queryKey: ['workouts'] }),
     queryClient.invalidateQueries({ queryKey: ['recipes'] }),
     queryClient.invalidateQueries({ queryKey: ['foods'] }),
   ]);

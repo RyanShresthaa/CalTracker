@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 import prisma from '../lib/prisma';
-import { isGoalRealistic, effectiveGoal } from '../utils/calculations';
+import { isGoalRealistic, effectiveGoal, validateGoalWeightBmi } from '../utils/calculations';
+import { toAuthUser } from '../utils/userSerializer';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -56,6 +57,7 @@ export const register = async (req: Request, res: Response) => {
         name: data.name,
         settings: { create: {} },
       },
+      include: { settings: true },
     });
 
     const token = generateToken(user.id, user.isAdmin);
@@ -67,13 +69,7 @@ export const register = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        profileCompleted: user.profileCompleted,
-        isAdmin: user.isAdmin,
-      },
+      user: toAuthUser(user),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -88,7 +84,10 @@ export const login = async (req: Request, res: Response) => {
   try {
     const data = loginSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
+    const user = await prisma.user.findUnique({
+      where: { email: data.email },
+      include: { settings: true },
+    });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -107,13 +106,7 @@ export const login = async (req: Request, res: Response) => {
 
     return res.json({
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        profileCompleted: user.profileCompleted,
-        isAdmin: user.isAdmin,
-      },
+      user: toAuthUser(user),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -141,22 +134,30 @@ export const completeProfile = async (req: Request & { userId?: string }, res: R
     const userId = req.userId!;
     const data = profileSchema.parse(req.body);
 
+    const alignedGoal = data.goal === 'maintain_weight'
+      ? 'maintain_weight'
+      : effectiveGoal(data.currentWeight, data.goalWeight, data.goal);
+
+    if (alignedGoal !== 'maintain_weight') {
+      const bmiCheck = validateGoalWeightBmi(data.goalWeight, data.height);
+      if (!bmiCheck.valid) {
+        return res.status(400).json({ error: bmiCheck.message });
+      }
+    }
+
     // Validate goal realism if goal date provided
-    if (data.goalDate && data.goal !== 'maintain_weight') {
+    if (data.goalDate && alignedGoal !== 'maintain_weight') {
       const check = isGoalRealistic(
         data.currentWeight,
         data.goalWeight,
-        new Date(data.goalDate)
+        new Date(data.goalDate),
+        data.height,
+        alignedGoal,
       );
       if (!check.realistic) {
         return res.status(400).json({ error: check.message });
       }
     }
-
-    // Align goal type with weight direction when goal weight differs from current
-    const alignedGoal = data.goal === 'maintain_weight'
-      ? 'maintain_weight'
-      : effectiveGoal(data.currentWeight, data.goalWeight, data.goal);
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -174,6 +175,7 @@ export const completeProfile = async (req: Request & { userId?: string }, res: R
         goalDate: data.goalDate ? new Date(data.goalDate) : undefined,
         profileCompleted: true,
       },
+      include: { settings: true },
     });
 
     // Log initial weight
@@ -187,12 +189,7 @@ export const completeProfile = async (req: Request & { userId?: string }, res: R
 
     return res.json({
       message: 'Profile completed',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        profileCompleted: user.profileCompleted,
-      },
+      user: toAuthUser(user),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -273,25 +270,7 @@ export const getMe = async (req: Request & { userId?: string }, res: Response) =
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    return res.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      age: user.age,
-      sex: user.sex,
-      height: user.height,
-      currentWeight: user.currentWeight,
-      goalWeight: user.goalWeight,
-      activityLevel: user.activityLevel,
-      gymDaysPerWeek: user.gymDaysPerWeek,
-      dailyWalkKm: user.dailyWalkKm,
-      gymMinutesPerSession: user.gymMinutesPerSession,
-      goal: user.goal,
-      goalDate: user.goalDate,
-      profileCompleted: user.profileCompleted,
-      isAdmin: user.isAdmin,
-      settings: user.settings,
-    });
+    return res.json(toAuthUser(user));
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch user' });
   }

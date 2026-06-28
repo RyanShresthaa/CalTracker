@@ -11,6 +11,7 @@ import notificationRoutes from './routes/notification';
 import adminRoutes from './routes/admin';
 import dashboardRoutes from './routes/dashboard';
 import recipeRoutes from './routes/recipe';
+import workoutRoutes from './routes/workout';
 
 export function registerRoutes(app: Express) {
   app.use('/api/auth', authRoutes);
@@ -25,4 +26,5 @@ export function registerRoutes(app: Express) {
   app.use('/api/admin', adminRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/recipes', recipeRoutes);
+  app.use('/api/workouts', workoutRoutes);
 }

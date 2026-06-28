@@ -1,26 +1,42 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
-  House, ForkKnife, Drop, Scales, Lightning, ChartLine,
-  Gear, SignOut, List, X, UserCircle, BookOpen,
-} from 'phosphor-react';
-import { useAuthStore } from '../../store/authStore';
-import InstallPWA from '../InstallPWA';
-import toast from 'react-hot-toast';
+  Home, UtensilsCrossed, Droplets, Scale, Zap, LineChart,
+  Settings, LogOut, Menu, UserCircle, BookOpen, Dumbbell,
+} from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+import InstallPWA from '@/components/InstallPWA';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const navItems = [
-  { to: '/dashboard', icon: House, label: 'Dashboard' },
-  { to: '/food-log', icon: ForkKnife, label: 'Food Log' },
+  { to: '/dashboard', icon: Home, label: 'Dashboard' },
+  { to: '/food-log', icon: UtensilsCrossed, label: 'Food Log' },
   { to: '/recipes', icon: BookOpen, label: 'Recipes' },
-  { to: '/water', icon: Drop, label: 'Water' },
-  { to: '/weight', icon: Scales, label: 'Weight' },
-  { to: '/activity', icon: Lightning, label: 'Activity' },
-  { to: '/progress', icon: ChartLine, label: 'Progress' },
-  { to: '/settings', icon: Gear, label: 'Settings' },
+  { to: '/water', icon: Droplets, label: 'Water' },
+  { to: '/weight', icon: Scale, label: 'Weight' },
+  { to: '/workout', icon: Dumbbell, label: 'Workout' },
+  { to: '/activity', icon: Zap, label: 'Activity' },
+  { to: '/progress', icon: LineChart, label: 'Progress' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+function BrandMark() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
+        <Dumbbell className="h-4 w-4 text-background" strokeWidth={2} />
+      </div>
+      <span className="text-[15px] font-semibold tracking-tight text-foreground">CalTracker</span>
+    </div>
+  );
+}
+
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -28,100 +44,110 @@ export default function Layout() {
     await logout();
     toast.success('Logged out');
     navigate('/login');
+    onNavigate?.();
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <>
+      <div className="px-4 py-4">
+        <p className="truncate text-sm font-medium text-foreground">{user?.name}</p>
+        <p className="truncate text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+      </div>
 
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 z-30 w-56 flex flex-col
-        bg-surface border-r border-border
-        transform transition-transform duration-300 ease-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <div className="flex items-center justify-between h-14 px-5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-accent flex items-center justify-center">
-              <span className="font-mono text-xs font-bold text-on-accent">CT</span>
-            </div>
-            <span className="font-mono text-sm tracking-wider text-text-primary uppercase">CalTracker</span>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden btn-ghost p-1">
-            <X size={18} />
-          </button>
-        </div>
+      <Separator />
 
-        <div className="px-4 py-4 border-b border-border">
-          <p className="font-medium text-sm text-text-primary truncate">{user?.name}</p>
-          <p className="text-xs text-muted truncate font-mono">{user?.email}</p>
-        </div>
-
-        <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-200
-                ${isActive
-                  ? 'bg-hover text-accent border-l-2 border-accent'
-                  : 'text-muted hover:bg-hover hover:text-text-primary border-l-2 border-transparent'}
-              `}
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
-                  <span className="label-caps !text-[10px]">{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-
-          {user?.isAdmin && (
-            <NavLink
-              to="/admin"
-              className="flex items-center gap-3 px-3 py-2.5 text-sm text-coral hover:bg-hover transition-colors border-l-2 border-transparent"
-            >
-              <UserCircle size={18} />
-              <span className="label-caps !text-[10px]">Admin</span>
-            </NavLink>
-          )}
-        </nav>
-
-        <div className="px-2 py-3 border-t border-border">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-muted hover:bg-hover hover:text-coral transition-colors"
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2">
+        {navItems.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                isActive
+                  ? 'nav-active'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )
+            }
           >
-            <SignOut size={18} />
-            <span className="label-caps !text-[10px]">Logout</span>
-          </button>
+            <Icon className="h-4 w-4 shrink-0 opacity-70" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+
+        {user?.isAdmin && (
+          <NavLink
+            to="/admin"
+            onClick={onNavigate}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <UserCircle className="h-4 w-4 shrink-0 opacity-70" />
+            <span>Admin</span>
+          </NavLink>
+        )}
+      </nav>
+
+      <Separator />
+
+      <div className="p-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleLogout}
+          className="h-9 w-full justify-start gap-3 px-3 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          Logout
+        </Button>
+      </div>
+    </>
+  );
+}
+
+export default function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuthStore();
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      <aside className="hidden w-56 flex-col border-r border-border bg-sidebar lg:flex">
+        <div className="flex h-14 items-center px-4">
+          <BrandMark />
         </div>
+        <SidebarNav />
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 bg-surface border-b border-border flex items-center px-4 lg:px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden btn-ghost p-2 -ml-2"
-          >
-            <List size={22} />
-          </button>
-
-          <div className="hidden lg:block ml-1">
-            <p className="label-caps text-muted">{user?.name?.split(' ')[0]}</p>
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="flex w-56 flex-col bg-sidebar p-0 lg:hidden [&>button]:hidden">
+          <div className="flex h-14 items-center px-4 border-b border-border">
+            <BrandMark />
           </div>
+          <SidebarNav onNavigate={() => setSidebarOpen(false)} />
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 items-center border-b border-border bg-background px-4 lg:px-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden -ml-1"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          <p className="ml-2 hidden lg:block text-sm text-muted-foreground">
+            Hi, <span className="text-foreground font-medium">{user?.name?.split(' ')[0]}</span>
+          </p>
+
+          <ThemeToggle className="ml-auto" />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          <div className="max-w-6xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="mx-auto max-w-5xl">
             <Outlet />
           </div>
         </main>

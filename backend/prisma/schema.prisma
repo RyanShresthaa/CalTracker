@@ -41,6 +41,7 @@ model User {
   recipes           Recipe[]
   notifications     Notification[]
   sessions          Session[]
+  workoutSessions   WorkoutSession[]
 
   @@map("users")
 }
@@ -249,6 +250,45 @@ model ActivityLog {
   createdAt      DateTime @default(now())
 
   @@map("activity_logs")
+}
+
+model WorkoutSession {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String?
+  status      String   @default("active") // active | completed | cancelled
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  durationMin Float?
+  notes       String?
+  exercises   WorkoutExercise[]
+
+  @@map("workout_sessions")
+}
+
+model WorkoutExercise {
+  id          String         @id @default(uuid())
+  sessionId   String
+  session     WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name        String
+  muscleGroup String
+  sortOrder   Int            @default(0)
+  sets        WorkoutSet[]
+
+  @@map("workout_exercises")
+}
+
+model WorkoutSet {
+  id         String          @id @default(uuid())
+  exerciseId String
+  exercise   WorkoutExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  setNumber  Int
+  weight     Float
+  reps       Int
+  completed  Boolean         @default(true)
+
+  @@map("workout_sets")
 }
 
 model Notification {
