@@ -13,6 +13,7 @@ import MacroBar from '../components/ui/MacroBar';
 import CalorieProgressRing from '../components/ui/CalorieProgressRing';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useThemeColors } from '../lib/theme';
 
 const MEALS = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -260,7 +261,7 @@ function FoodSearchModal({ meal, onClose, onAdd, onMealChange }: any) {
                     onClick={() => (isCountableFood(selected) ? updateCount(value) : updateAmount(value))}
                     className={`px-2.5 py-1 text-xs font-mono transition-colors border
                       ${(isCountableFood(selected) ? count === value : amount === value)
-                        ? 'bg-accent text-bg border-accent'
+                        ? 'bg-accent text-on-accent border-accent'
                         : 'bg-surface text-muted border-border hover:bg-hover'}`}
                   >
                     {label}
@@ -323,6 +324,7 @@ function MealSection({ meal, logs, onDelete, delay }: any) {
 }
 
 export default function FoodLogPage() {
+  const theme = useThemeColors();
   const [modal, setModal] = useState<string | null>(null);
   const [modalMeal, setModalMeal] = useState('lunch');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -396,9 +398,9 @@ export default function FoodLogPage() {
               {remaining < 0 && <p className="label-caps text-coral mt-1">over</p>}
             </div>
           </div>
-          <MacroBar label="Protein" consumed={totals.protein} goal={macroGoals.protein.goal} color="#C8F55A" />
-          <MacroBar label="Carbs" consumed={totals.carbs} goal={macroGoals.carbs.goal} color="#F0EDE6" />
-          <MacroBar label="Fat" consumed={totals.fat} goal={macroGoals.fat.goal} color="#FF6B35" />
+          <MacroBar label="Protein" consumed={totals.protein} goal={macroGoals.protein.goal} color={theme.macroProtein} />
+          <MacroBar label="Carbs" consumed={totals.carbs} goal={macroGoals.carbs.goal} color={theme.macroCarbs} />
+          <MacroBar label="Fat" consumed={totals.fat} goal={macroGoals.fat.goal} color={theme.macroFat} />
         </div>
       </div>
 

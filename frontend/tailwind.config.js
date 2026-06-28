@@ -5,14 +5,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#0F0F0F',
-        surface: '#1A1A1A',
-        border: '#2A2A2A',
-        accent: '#C8F55A',
-        coral: '#FF6B35',
-        'text-primary': '#F0EDE6',
-        muted: '#6B6B6B',
-        hover: '#222222',
+        bg: 'var(--bg-primary)',
+        surface: 'var(--bg-card)',
+        border: 'var(--border)',
+        accent: 'var(--accent)',
+        coral: 'var(--coral)',
+        'text-primary': 'var(--text-primary)',
+        muted: 'var(--text-secondary)',
+        hover: 'var(--hover)',
+        'on-accent': 'var(--on-accent)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

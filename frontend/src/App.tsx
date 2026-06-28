@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore, useThemeStore } from './store/authStore';
+import { themeColorMeta } from './lib/theme';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -46,6 +47,8 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', themeColorMeta(darkMode));
   }, [darkMode]);
 
   return (

@@ -16,7 +16,7 @@ export default function CalorieProgressRing({
   const targetPct = goal > 0 ? Math.min(consumed / goal, 1) : 0;
   const [animatedPct, setAnimatedPct] = useState(0);
   const isOver = remaining < 0;
-  const ringColor = isOver ? '#FF6B35' : '#C8F55A';
+  const ringColor = isOver ? 'var(--coral)' : 'var(--accent)';
   const degrees = animatedPct * 360;
   const innerSize = size - 12;
 
@@ -33,7 +33,7 @@ export default function CalorieProgressRing({
       <div
         className="absolute inset-0 rounded-full transition-[background] duration-[600ms] ease-out"
         style={{
-          background: `conic-gradient(${ringColor} ${degrees}deg, #2A2A2A ${degrees}deg)`,
+          background: `conic-gradient(${ringColor} ${degrees}deg, var(--ring-track) ${degrees}deg)`,
         }}
       />
       <div

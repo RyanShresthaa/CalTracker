@@ -48,7 +48,7 @@ export default function Layout() {
         <div className="flex items-center justify-between h-14 px-5 border-b border-border">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-accent flex items-center justify-center">
-              <span className="font-mono text-xs font-bold text-bg">CT</span>
+              <span className="font-mono text-xs font-bold text-on-accent">CT</span>
             </div>
             <span className="font-mono text-sm tracking-wider text-text-primary uppercase">CalTracker</span>
           </div>

@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 border-r border-border flex-col justify-center p-12">
         <div className="max-w-sm">
           <div className="w-10 h-10 bg-accent flex items-center justify-center mb-8">
-            <span className="font-mono text-sm font-bold text-bg">CT</span>
+            <span className="font-mono text-sm font-bold text-on-accent">CT</span>
           </div>
           <h1 className="font-mono text-3xl font-light tracking-wider text-text-primary uppercase mb-4">
             CalTracker
@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="lg:hidden flex items-center gap-2 mb-10">
             <div className="w-8 h-8 bg-accent flex items-center justify-center">
-              <span className="font-mono text-xs font-bold text-bg">CT</span>
+              <span className="font-mono text-xs font-bold text-on-accent">CT</span>
             </div>
             <span className="font-mono text-sm tracking-wider uppercase">CalTracker</span>
           </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
             <button type="submit" disabled={isLoading}
               className="btn-primary w-full flex items-center justify-center gap-2 py-3">
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-bg/30 border-t-bg rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-on-accent/30 border-t-on-accent rounded-full animate-spin" />
               ) : 'Sign In'}
             </button>
           </form>

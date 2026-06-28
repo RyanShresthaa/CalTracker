@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Lightning } from 'phosphor-react';
 import { useDashboard } from '../lib/hooks';
+import { useThemeColors } from '../lib/theme';
 import { format, parse } from 'date-fns';
 import CalorieProgressRing from '../components/ui/CalorieProgressRing';
 import MacroBar from '../components/ui/MacroBar';
@@ -53,6 +54,7 @@ function Skeleton() {
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard();
+  const theme = useThemeColors();
 
   if (isLoading) return <Skeleton />;
   if (!data) return <div className="card text-center py-12 text-muted">Failed to load dashboard</div>;
@@ -119,9 +121,9 @@ export default function DashboardPage() {
     <div key="macros" className="card">
       <p className="label-caps mb-4">Today&apos;s macros</p>
       <div className="space-y-4">
-        <MacroBar label="Protein" consumed={macros.protein.consumed} goal={macros.protein.goal} color="#C8F55A" />
-        <MacroBar label="Carbs" consumed={macros.carbs.consumed} goal={macros.carbs.goal} color="#F0EDE6" />
-        <MacroBar label="Fat" consumed={macros.fat.consumed} goal={macros.fat.goal} color="#FF6B35" />
+        <MacroBar label="Protein" consumed={macros.protein.consumed} goal={macros.protein.goal} color={theme.macroProtein} />
+        <MacroBar label="Carbs" consumed={macros.carbs.consumed} goal={macros.carbs.goal} color={theme.macroCarbs} />
+        <MacroBar label="Fat" consumed={macros.fat.consumed} goal={macros.fat.goal} color={theme.macroFat} />
       </div>
     </div>,
 
@@ -172,26 +174,26 @@ export default function DashboardPage() {
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={theme.chartGrid} vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={formatChartDay}
-            tick={{ fontSize: 10, fill: '#6B6B6B', fontFamily: 'DM Mono' }}
+            tick={{ fontSize: 10, fill: theme.chartTick, fontFamily: 'DM Mono' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: '#6B6B6B', fontFamily: 'DM Mono' }}
+            tick={{ fontSize: 10, fill: theme.chartTick, fontFamily: 'DM Mono' }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
           />
           <Tooltip
             contentStyle={{
-              background: '#1A1A1A',
-              border: '1px solid #2A2A2A',
+              background: theme.chartTooltipBg,
+              border: `1px solid ${theme.chartTooltipBorder}`,
               borderRadius: 0,
-              color: '#F0EDE6',
+              color: theme.chartTooltipText,
               fontFamily: 'Inter',
             }}
             labelFormatter={formatChartDayLong}
@@ -200,8 +202,8 @@ export default function DashboardPage() {
           <Area
             type="monotone"
             dataKey="calories"
-            stroke="#C8F55A"
-            fill="#C8F55A"
+            stroke={theme.accent}
+            fill={theme.accent}
             fillOpacity={0.12}
             strokeWidth={1.5}
             name="Calories"

@@ -107,6 +107,13 @@ export const useThemeStore = create<ThemeState>()(
         set({ darkMode: val });
       },
     }),
-    { name: 'theme-storage' }
+    {
+      name: 'theme-storage',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          document.documentElement.classList.toggle('dark', state.darkMode);
+        }
+      },
+    }
   )
 );
