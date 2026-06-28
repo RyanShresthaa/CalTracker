@@ -1,15 +1,36 @@
 import axios from 'axios';
 
-const apiBase =
-  import.meta.env.VITE_API_URL
-  || (import.meta.env.VITE_VERCEL_API === '1' ? '/_/backend/api' : '/api');
+function resolveApiBase(): string {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+
+  // Vite dev server — proxied to localhost:5000
+  if (import.meta.env.DEV) return '/api';
+
+  // Built on Vercel (covers *.vercel.app and custom domains)
+  if (import.meta.env.VITE_VERCEL === '1') return '/_/backend/api';
+
+  // Local production preview on this machine / LAN
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (
+      host === 'localhost'
+      || host === '127.0.0.1'
+      || /^192\.168\.\d+\.\d+$/.test(host)
+    ) {
+      return '/api';
+    }
+  }
+
+  // Any other hosted frontend (fallback)
+  return '/_/backend/api';
+}
 
 const api = axios.create({
-  baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
+  config.baseURL = resolveApiBase();
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;

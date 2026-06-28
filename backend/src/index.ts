@@ -23,10 +23,50 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+if (process.env.VERCEL) {
+  app.set('trust proxy', 1);
+}
+
 // Security middleware
 app.use(helmet());
+const corsOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin(origin, callback) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (corsOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    // Vercel preview/production frontends (*.vercel.app)
+    if (/^https:\/\/[\w.-]+\.vercel\.app$/.test(origin)) {
+      callback(null, true);
+      return;
+    }
+    // Vercel sets VERCEL_URL on each service (supports custom domains too)
+    const vercelAppOrigin = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : null;
+    if (vercelAppOrigin && origin === vercelAppOrigin) {
+      callback(null, true);
+      return;
+    }
+    // Allow phone/LAN access during local development (e.g. http://192.168.x.x:4173)
+    if (
+      process.env.NODE_ENV !== 'production'
+      && /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/.test(origin)
+    ) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
   credentials: true,
 }));
 
@@ -45,9 +85,13 @@ app.use(express.urlencoded({ extended: true }));
 // Logging
 app.use(morgan('dev'));
 
-// Health check
+// Health check (no database — use to verify the function is alive)
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    database: process.env.DATABASE_URL ? 'configured' : 'missing',
+  });
 });
 
 // Routes
