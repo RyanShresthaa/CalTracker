@@ -4,113 +4,237 @@
 
 @layer base {
   :root {
-    --bg-primary: #0F0F0F;
-    --bg-card: #1A1A1A;
-    --text-primary: #F0EDE6;
-    --text-secondary: #6B6B6B;
-    --border: #2A2A2A;
-    --accent: #C8F55A;
-    --coral: #FF6B35;
+    --bg-primary: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --text-primary: #f0ede6;
+    --text-secondary: #6b6b6b;
+    --border: #2a2a2a;
+    --accent: #c8f55a;
+    --coral: #ff6b35;
     --hover: #222222;
   }
 
   * {
-    border-color: #2A2A2A;
+    border-color: var(--border);
   }
 
   html {
-    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-bg text-text-primary font-sans;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: Inter, system-ui, sans-serif;
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0F0F0F; }
-  ::-webkit-scrollbar-thumb { background: #2A2A2A; }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+  }
 }
 
 @layer components {
   .card {
-    @apply bg-surface border border-border p-6;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
     border-radius: 0;
   }
 
   .card-hover {
-    @apply card transition-colors duration-200 hover:bg-hover;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 0;
+    transition: background-color 200ms;
+  }
+
+  .card-hover:hover {
+    background-color: var(--hover);
   }
 
   .label-caps {
-    @apply text-label uppercase tracking-[0.12em] text-muted font-sans;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-family: Inter, system-ui, sans-serif;
   }
 
   .btn-primary {
-    @apply bg-accent text-bg px-6 py-2.5 font-sans font-semibold uppercase tracking-[0.08em] text-sm
-           hover:brightness-110 active:brightness-95 transition-all duration-200;
+    background-color: var(--accent);
+    color: var(--bg-primary);
+    padding: 0.625rem 1.5rem;
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.875rem;
     border-radius: 9999px;
+    transition: filter 200ms;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-primary:active {
+    filter: brightness(0.95);
   }
 
   .btn-secondary {
-    @apply bg-surface text-text-primary border border-border px-6 py-2.5 font-medium
-           hover:bg-hover active:brightness-95 transition-all duration-200;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
     border-radius: 0;
+    transition: background-color 200ms, filter 200ms;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--hover);
+  }
+
+  .btn-secondary:active {
+    filter: brightness(0.95);
   }
 
   .btn-danger {
-    @apply bg-coral text-bg px-4 py-2 font-semibold
-           hover:brightness-110 active:brightness-95 transition-all duration-200;
+    background-color: var(--coral);
+    color: var(--bg-primary);
+    padding: 0.5rem 1rem;
+    font-weight: 600;
     border-radius: 0;
+    transition: filter 200ms;
+  }
+
+  .btn-danger:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-danger:active {
+    filter: brightness(0.95);
   }
 
   .btn-ghost {
-    @apply text-muted px-4 py-2 font-medium
-           hover:bg-hover hover:text-text-primary transition-all duration-200;
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
     border-radius: 0;
+    transition: background-color 200ms, color 200ms;
+  }
+
+  .btn-ghost:hover {
+    background-color: var(--hover);
+    color: var(--text-primary);
   }
 
   .btn-pill {
-    @apply bg-accent text-bg px-8 py-3 font-sans font-bold uppercase tracking-[0.12em] text-label
-           hover:brightness-110 active:brightness-95 transition-all duration-200 shadow-lg;
+    background-color: var(--accent);
+    color: var(--bg-primary);
+    padding: 0.75rem 2rem;
+    font-family: Inter, system-ui, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
     border-radius: 9999px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    transition: filter 200ms;
+  }
+
+  .btn-pill:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-pill:active {
+    filter: brightness(0.95);
   }
 
   .input {
-    @apply w-full px-4 py-2.5 border border-border
-           bg-bg text-text-primary
-           placeholder:text-muted focus:outline-none focus:border-accent
-           transition-all duration-200;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--border);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     border-radius: 0;
+    transition: border-color 200ms;
+  }
+
+  .input::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
   }
 
   .label {
-    @apply block text-label uppercase tracking-[0.12em] text-muted mb-1.5;
+    display: block;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
   }
 
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 text-label uppercase tracking-[0.12em] border border-border;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
     border-radius: 0;
   }
 
   .skeleton {
-    @apply animate-pulse bg-border;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background-color: var(--border);
     border-radius: 0;
   }
 
   .macro-line {
-    @apply h-px bg-border overflow-hidden;
+    height: 1px;
+    background-color: var(--border);
+    overflow: hidden;
   }
 
   .macro-fill {
-    @apply h-full transition-all duration-500 ease-out;
+    height: 100%;
+    transition: all 500ms ease-out;
   }
 
   .divider-row {
-    @apply border-b border-border last:border-0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .divider-row:last-child {
+    border-bottom: 0;
   }
 
   .link-accent {
-    @apply text-accent hover:brightness-110 transition-colors;
+    color: var(--accent);
+    transition: filter 200ms;
+  }
+
+  .link-accent:hover {
+    filter: brightness(1.1);
   }
 
   .stagger-item {
@@ -120,7 +244,9 @@
 
 @layer utilities {
   .font-display {
-    @apply font-mono font-light tracking-wider;
+    font-family: "DM Mono", "Space Mono", ui-monospace, monospace;
+    font-weight: 300;
+    letter-spacing: 0.05em;
   }
 
   .animate-in {
@@ -133,8 +259,32 @@
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
   }
 }

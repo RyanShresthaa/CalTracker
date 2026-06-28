@@ -7,16 +7,17 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
       manifest: {
         name: 'CalorieTracker',
         short_name: 'CalorieTracker',
         description: 'Track calories, macros, water, workouts, and recipes.',
-        theme_color: '#6366f1',
-        background_color: '#f8fafc',
+        theme_color: '#0F0F0F',
+        background_color: '#0F0F0F',
         display: 'standalone',
         orientation: 'portrait-primary',
         scope: '/',

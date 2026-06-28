@@ -6,16 +6,28 @@ import { queryClient } from './lib/queryClient'
 import App from './App.tsx'
 import './index.css'
 
-registerSW({
-  onNeedRefresh() {
-    if (confirm('A new version is available. Reload to update?')) {
-      window.location.reload()
-    }
-  },
-  onOfflineReady() {
-    console.info('CalorieTracker is ready to work offline.')
-  },
-})
+// Remove stale dev service workers left over from earlier PWA dev mode
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => void registration.unregister())
+  })
+  void caches?.keys().then((keys) => {
+    keys.forEach((key) => void caches.delete(key))
+  })
+}
+
+if (import.meta.env.PROD) {
+  registerSW({
+    onNeedRefresh() {
+      if (confirm('A new version is available. Reload to update?')) {
+        window.location.reload()
+      }
+    },
+    onOfflineReady() {
+      console.info('CalorieTracker is ready to work offline.')
+    },
+  })
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
