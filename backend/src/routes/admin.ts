@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { getAdminStats, adminGetUsers, adminDeleteUser, adminGetFoods, adminCreateFood, adminUpdateFood, adminDeleteFood } from '../controllers/adminController';
+import { authenticate, requireAdmin } from '../middleware/auth';
+const router = Router();
+router.use(authenticate, requireAdmin);
+router.get('/stats', getAdminStats);
+router.get('/users', adminGetUsers);
+router.delete('/users/:id', adminDeleteUser);
+router.get('/foods', adminGetFoods);
+router.post('/foods', adminCreateFood);
+router.put('/foods/:id', adminUpdateFood);
+router.delete('/foods/:id', adminDeleteFood);
+export default router;
