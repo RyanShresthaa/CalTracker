@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+const apiBase =
+  import.meta.env.VITE_API_URL
+  || (import.meta.env.VITE_VERCEL_API === '1' ? '/_/backend/api' : '/api');
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL
-    || (import.meta.env.PROD ? '/_/backend/api' : '/api'),
+  baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
 });
 
